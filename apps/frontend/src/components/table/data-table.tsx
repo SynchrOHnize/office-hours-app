@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/table"
 
 import { Input } from "@/components/ui/input"
-import { InsertOfficeHoursForm, InsertOfficeHoursText } from "./insert-office-hours"
+import { InsertOfficeHoursForm } from "./insert-office-hours"
 import { deleteOfficeHours, fetchOfficeHours, fetchUserCourses, getIcalFile, getIcalFileByIds, OfficeHour } from "@/services/userService"
 import { useQuery } from "@tanstack/react-query"
 import { AddCourseInput } from "./add-user-course"
