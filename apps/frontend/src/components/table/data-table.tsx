@@ -32,6 +32,7 @@ import {
     getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
+    Row,
 } from "@tanstack/react-table"
 
 import {
@@ -45,6 +46,7 @@ import {
 
 import { Input } from "@/components/ui/input"
 import { InsertOfficeHoursForm } from "./insert-office-hours"
+import { EditOfficeHoursForm } from "./edit-office-hours"
 import { deleteOfficeHours, fetchOfficeHours, fetchUserCourses, getIcalFile, getIcalFileByIds, OfficeHour } from "@/services/userService"
 import { useQuery } from "@tanstack/react-query"
 import { AddCourseInput } from "./add-user-course"
@@ -69,6 +71,7 @@ export function DataTable<TData, TValue>({
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
+    const [editRow, setEditRow] = React.useState<Row<TData> | null>(null)
     const { toast } = useToast()
 
     const { refetch } = useQuery({
@@ -179,6 +182,11 @@ export function DataTable<TData, TValue>({
         await deleteOfficeHours(ids)
         await refetch()
         setRowSelection({})
+    };
+
+    const handleEditClick = (row: Row<TData>) => {
+        // console.log("Row data:", row.original);
+        setEditRow(row);
     };
 
 
@@ -347,9 +355,10 @@ export function DataTable<TData, TValue>({
 
                                     {admin && (
                                     <TableCell>
-                                        <button>
+                                        {/* <Button variant="outline" size="sm" onClick={() => handleEditClick(row)}>
                                             <Edit className="h-4 w-4" />
-                                        </button>
+                                        </Button> */}
+                                        {admin && <EditOfficeHoursForm row={row.original} />}
                                     </TableCell>
                                     )}
                                 </TableRow>
