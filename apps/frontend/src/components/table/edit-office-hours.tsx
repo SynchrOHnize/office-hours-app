@@ -233,82 +233,6 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 flex flex-col">
                             <input type="hidden" {...form.register('course_id')} />
 
-                            <FormField
-                                control={form.control}
-                                name="course_code"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-col">
-                                        <FormLabel>Course Code (Search)</FormLabel>
-                                        <FormControl>
-                                            <div className="relative">
-                                                <Input
-                                                    placeholder="Search course code..."
-                                                    {...field}
-                                                    
-                                                    onFocus={() => setIsFocused(true)}
-                                                    onBlur={() => {
-                                                        // Small delay to allow click events on CommandItems to fire
-                                                        setTimeout(() => {
-                                                            setIsFocused(false);
-                                                        }, 200);
-                                                    }}
-                                                    onChange={(e) => {
-                                                        field.onChange(e);
-                                                        form.reset({
-                                                            ...form.getValues(),
-                                                            course_id: row.course_id || undefined,
-                                                            title: ""
-                                                        });
-                                                        handleSearch(e.target.value);
-                                                    }}
-                                                />
-                                                {searchResults.length > 0 && isFocused && (
-                                                    <Command className="h-[300px] absolute top-full left-0 right-0 z-50 mt-1 border rounded-md bg-popover">
-                                                        <CommandList>
-                                                            <CommandGroup>
-                                                                {searchResults.map((result) => (
-                                                                    <CommandItem
-                                                                        key={result.key}
-                                                                        onSelect={() => handleSelectClass(result)}
-                                                                        className="cursor-pointer"
-                                                                    >
-                                                                        <span>{result.code} - {result.title}</span>
-                                                                    </CommandItem>
-                                                                ))}
-                                                            </CommandGroup>
-                                                        </CommandList>
-                                                    </Command>
-                                                )}
-                                            </div>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={form.control}
-                                name="title"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Course Title</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                {...field}
-                                                readOnly
-                                                placeholder="Course title will appear here..."
-                                                defaultValue={row.title}
-                                                className="bg-muted"
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <hr className="my-4 border-t border-border" />
-
-
                             {/* Rest of the form fields remain unchanged */}
                             <FormField
                                 control={form.control}
@@ -331,13 +255,13 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Day of the week:</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <Select onValueChange={field.onChange} defaultValue={row.day}>
                                             <FormControl>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Select a day..." />
                                                 </SelectTrigger>
                                             </FormControl>
-                                            <SelectContent>
+                                            <SelectContent defaultValue={row.day}>
                                                 <SelectItem value="monday">Monday</SelectItem>
                                                 <SelectItem value="tuesday">Tuesday</SelectItem>
                                                 <SelectItem value="wednesday">Wednesday</SelectItem>
