@@ -114,8 +114,29 @@ const formSchema = z.object({
     }
 });
 
+// Time is currently stored as a string in 12-hour format (e.g., "12:00 PM")
+// But TimeField component expects time in 24-hour format (e.g., "12:00")
+function convertTo24Hour(time12h: string): string {
+    const [time, modifier] = time12h.split(' ');
+
+    let [hours, minutes] = time.split(':');
+
+    if (hours === '12') {
+        hours = '00';
+    }
+
+    if (modifier === 'PM') {
+        hours = (parseInt(hours, 10) + 12).toString();
+    }
+
+    return `${hours.padStart(2, '0')}:${minutes}`;
+}
+
 export function EditOfficeHoursForm({ row }: { row: any }) {
     console.log(row)
+    const time12hr = row.start_time;
+    const time24hr = convertTo24Hour(time12hr);
+    console.log(time24hr)
     
     const [searchResults, setSearchResults] = useState<SearchClass[]>([]);
     const [isFocused, setIsFocused] = useState(false);
@@ -255,13 +276,13 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Day of the week:</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={row.day}>
+                                        <Select onValueChange={field.onChange} defaultValue={row.day.toLowerCase()}>
                                             <FormControl>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Select a day..." />
                                                 </SelectTrigger>
                                             </FormControl>
-                                            <SelectContent defaultValue={row.day}>
+                                            <SelectContent>
                                                 <SelectItem value="monday">Monday</SelectItem>
                                                 <SelectItem value="tuesday">Tuesday</SelectItem>
                                                 <SelectItem value="wednesday">Wednesday</SelectItem>
@@ -287,6 +308,7 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                                                 <TimeField
                                                     value={field.value}
                                                     onChange={field.onChange}
+                                                    // defaultValue={convertTo24Hour(row.start_time)}
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -318,10 +340,10 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Modality:</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <Select onValueChange={field.onChange} defaultValue={row.mode.toLowerCase()}>
                                             <FormControl>
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Select a modality..." />
+                                                    <SelectValue placeholder="Select a modality..."/>
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
@@ -367,7 +389,7 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                                 />
                             )}
                             <hr className="my-4 border-dotted border-1 border-gray-300" />
-                            <Button type="submit">Submit</Button>
+                            <Button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white">Update</Button>
                         </form>
                     </Form>
                 </DialogContent>
