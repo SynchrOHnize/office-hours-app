@@ -133,11 +133,6 @@ function convertTo24Hour(time12h: string): string {
 }
 
 export function EditOfficeHoursForm({ row }: { row: any }) {
-    console.log(row)
-    const time12hr = row.start_time;
-    const time24hr = convertTo24Hour(time12hr);
-    console.log(time24hr)
-    
     const [searchResults, setSearchResults] = useState<SearchClass[]>([]);
     const [isFocused, setIsFocused] = useState(false);
     const { toast } = useToast();
@@ -147,45 +142,18 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            course_id: row.course_id || "",
-            course_code: row.course_code || "",
-            title: row.title || "",
             host: row.host || "",
-            day: row.day || "",
-            start_time: row.start_time || "",
-            end_time: row.end_time || "",
-            mode: row.mode || "",
-            location: row.location || "",
-            link: row.link || "",
+            day: (row.day || "").toLowerCase(),
+            start_time: (convertTo24Hour(row.start_time) || "").toLowerCase(),
+            end_time: (convertTo24Hour(row.end_time) || "").toLowerCase(),
+            mode: (row.mode || "").toLowerCase(),
+            location: (row.location || "").toLowerCase(),
+            link: (row.link || "").toLowerCase(),
         },
-    })
+    });
 
     
     const mode = form.watch("mode")
-    
-    const handleSearch = async (value: string) => {
-        
-        if (value.length >= 3) {
-            const response = await searchClasses(value);
-            setSearchResults(response?.results || []);
-        } else {
-            setSearchResults([]);
-        }
-    };
-    
-    const handleSelectClass = (selectedClass: SearchClass) => {
-        
-        form.reset({
-            ...form.getValues(),
-            course_id: parseInt(selectedClass.key, 10),
-            course_code: selectedClass.code.replace(/\s+/g, '').toUpperCase(),
-            title: selectedClass.title
-        });
-        setSearchResults([]);
-        setIsFocused(false);
-    };
-    
-    // setSearchResults([]);
 
     // const resetForm = async () => {
     //     // Preserve current course data
@@ -258,7 +226,6 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                             <FormField
                                 control={form.control}
                                 name="host"
-                                defaultValue={row.host}
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Host</FormLabel>
@@ -273,10 +240,11 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                             <FormField
                                 control={form.control}
                                 name="day"
-                                render={({ field }) => (
-                                    <FormItem>
+                                render={({ field }) => {
+                                    // console.log(field.value)
+                                    return <FormItem>
                                         <FormLabel>Day of the week:</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={row.day.toLowerCase()}>
+                                        <Select onValueChange={field.onChange} value={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Select a day..." />
@@ -294,7 +262,7 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                                         </Select>
                                         <FormMessage />
                                     </FormItem>
-                                )}
+                                }}
                             />
 
                             <div className="grid grid-cols-2 gap-4">
@@ -308,7 +276,6 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                                                 <TimeField
                                                     value={field.value}
                                                     onChange={field.onChange}
-                                                    // defaultValue={convertTo24Hour(row.start_time)}
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -337,10 +304,11 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                             <FormField
                                 control={form.control}
                                 name="mode"
-                                render={({ field }) => (
-                                    <FormItem>
+                                render={({ field }) => {
+                                    // console.log(field.value)
+                                    return <FormItem>
                                         <FormLabel>Modality:</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={row.mode.toLowerCase()}>
+                                        <Select onValueChange={field.onChange} value={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Select a modality..."/>
@@ -354,7 +322,7 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                                         </Select>
                                         <FormMessage />
                                     </FormItem>
-                                )}
+                                }}
                             />
 
                             {["in-person", "hybrid"].includes(mode) && (
