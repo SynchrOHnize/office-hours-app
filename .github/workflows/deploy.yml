@@ -74,6 +74,7 @@ jobs:
         DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
         DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
       run: |
+        ssh $DEPLOY_USER@$DEPLOY_HOST "mkdir -p ~/app/apps/backend ~/app/apps/frontend"
         scp -r docker-compose.yml $DEPLOY_USER@$DEPLOY_HOST:~/app/docker-compose.yml
         scp -r apps/backend/.env.production $DEPLOY_USER@$DEPLOY_HOST:~/app/apps/backend/.env.production
         scp -r apps/frontend/.env.production $DEPLOY_USER@$DEPLOY_HOST:~/app/apps/frontend/.env.production
@@ -88,5 +89,5 @@ jobs:
           fi
 
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          cd app && docker system prune -a --volumes && docker-compose pull && docker-compose up -d
+          cd app && docker system prune -a --volumes && docker compose pull && docker compose up -d
         "
