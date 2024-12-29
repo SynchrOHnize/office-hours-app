@@ -1,6 +1,5 @@
 "use client"
-import { Edit, Plus } from "lucide-react"
-import { useState } from "react";
+import { Edit } from "lucide-react"
 import {
     Dialog,
     DialogContent,
@@ -29,16 +28,8 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { searchClasses } from "@/services/searchService"
-import { SearchClass } from "@/services/searchService"
-import {
-    Command,
-    CommandGroup,
-    CommandItem,
-    CommandList
-} from "@/components/ui/command"
 import { TimeField } from "../ui/time-field";
-import { fetchCourseById, storeCourse, storeOfficeHour } from "@/services/userService";
+import { storeOfficeHour } from "@/services/userService";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -133,8 +124,6 @@ function convertTo24Hour(time12h: string): string {
 }
 
 export function EditOfficeHoursForm({ row }: { row: any }) {
-    const [searchResults, setSearchResults] = useState<SearchClass[]>([]);
-    const [isFocused, setIsFocused] = useState(false);
     const { toast } = useToast();
     const queryClient = useQueryClient();
     
@@ -155,48 +144,13 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
     
     const mode = form.watch("mode")
 
-    // const resetForm = async () => {
-    //     // Preserve current course data
-    //     const currentCourseId = form.getValues('course_id');
-    //     const currentCourseCode = form.getValues('course_code');
-    //     const currentCourseTitle = form.getValues('title');
-
-    //     // Reset form while keeping course data
-    //     form.reset({
-    //         course_id: currentCourseId,
-    //         course_code: currentCourseCode,
-    //         title: currentCourseTitle,
-    //         host: '',
-    //         day: undefined,
-    //         start_time: '',
-    //         end_time: '',
-    //         mode: undefined,
-    //         location: '',
-    //         link: ''
-    //     });
-
-    //     console.log("Office hour created successfully");
-    // }
-
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
-
-        const existingCourse = await fetchCourseById(data.course_id);
-        if (!existingCourse) {
-            const course = await storeCourse(data);
-            if (!course) {
-                console.error("Failed to create course");
-                return;
-            }
-            await queryClient.invalidateQueries({ queryKey: ['courses'] });
-        }
-
         const officeHour = await storeOfficeHour(data);
         if (!officeHour) {
             console.error("Failed to create office hour");
             return;
         }
 
-        // await resetForm();
         toast({
             title: "Success!",
             description: "Office hours created successfully.",

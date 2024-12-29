@@ -15,6 +15,13 @@
     "allowJs": true,
     "types": [
       "bun-types"
-    ]
-  }
+    ],
+    "outDir": "./dist",
+  },
+  "include": [
+    "./**/*"
+  ],
+  "exclude": [
+    "./dist/**/*"
+  ]
 }
