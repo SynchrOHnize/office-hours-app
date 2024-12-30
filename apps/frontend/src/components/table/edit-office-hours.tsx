@@ -136,7 +136,7 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
             start_time: (convertTo24Hour(row.start_time) || "").toLowerCase(),
             end_time: (convertTo24Hour(row.end_time) || "").toLowerCase(),
             mode: (row.mode || "").toLowerCase(),
-            location: (row.location || "").toLowerCase(),
+            location: row.location || "",
             link: (row.link || "").toLowerCase(),
         },
     });
