@@ -200,6 +200,18 @@ export const storeOfficeHour = async (officeHour: Record<string, any>): Promise<
   }
 }
 
+export const updateOfficeHour = async (id: number, officeHour: Record<string, any>): Promise<Payload | null> => {
+  console.log(officeHour.id)
+  try {
+    const response = await api.put(`/users/office-hours/${id}`, officeHour);
+    const payload = response.data;
+    return payload;
+  } catch (error) {
+    console.error("Error updating office hour:", error);
+    return null;
+  }
+}
+
 export const deleteOfficeHours = async(ids: number[]): Promise<Payload | null> => {
   try {
     const response = await api.delete('users/office-hours', {

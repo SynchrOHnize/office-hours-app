@@ -32,6 +32,7 @@ import {
     getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
+    Row,
 } from "@tanstack/react-table"
 
 import {
@@ -45,12 +46,15 @@ import {
 
 import { Input } from "@/components/ui/input"
 import { InsertOfficeHoursForm } from "./insert-office-hours"
+import { EditOfficeHoursForm } from "./edit-office-hours"
 import { deleteOfficeHours, fetchOfficeHours, fetchUserCourses, getIcalFile, getIcalFileByIds, OfficeHour } from "@/services/userService"
 import { useQuery } from "@tanstack/react-query"
 import { AddCourseInput } from "./add-user-course"
 import { Filter, Trash } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
+
+import { Edit } from "lucide-react"
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -67,6 +71,7 @@ export function DataTable<TData, TValue>({
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
+    const [editRow, setEditRow] = React.useState<Row<TData> | null>(null)
     const { toast } = useToast()
 
     const { refetch } = useQuery({
@@ -179,6 +184,11 @@ export function DataTable<TData, TValue>({
         setRowSelection({})
     };
 
+    const handleEditClick = (row: Row<TData>) => {
+        // console.log("Row data:", row.original);
+        setEditRow(row);
+    };
+
 
     const DeleteButton = () => {
         const numSelected = Object.keys(rowSelection).length;
@@ -247,6 +257,8 @@ export function DataTable<TData, TValue>({
         );
     };
 
+    console.log(table.getHeaderGroups()) // TODO Testing, Remove
+
     return (
         <div className={cn(table.getRowModel().rows?.length === 0 && "max-w-screen-lg")}>
             {/* Top section: Search, filters and action buttons */}
@@ -307,6 +319,11 @@ export function DataTable<TData, TValue>({
                                             )}
                                     </TableHead>
                                 ))}
+                                {admin && (
+                                    <TableHead>
+                                        Edit
+                                    </TableHead>
+                                )}
                             </TableRow>
                         ))}
                     </TableHeader>
@@ -335,6 +352,15 @@ export function DataTable<TData, TValue>({
                                             )}
                                         </TableCell>
                                     ))}
+
+                                    {admin && (
+                                    <TableCell>
+                                        {/* <Button variant="outline" size="sm" onClick={() => handleEditClick(row)}>
+                                            <Edit className="h-4 w-4" />
+                                        </Button> */}
+                                        {admin && <EditOfficeHoursForm row={row.original} />}
+                                    </TableCell>
+                                    )}
                                 </TableRow>
                             ))
                         ) : (
