@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { TimeField } from "../ui/time-field";
-import { storeOfficeHour } from "@/services/userService";
+import { updateOfficeHour } from "@/services/userService";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -145,18 +145,18 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
     const mode = form.watch("mode")
 
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
-        const officeHour = await storeOfficeHour(data);
+        const officeHour = await updateOfficeHour(data);
         if (!officeHour) {
-            console.error("Failed to create office hour");
+            console.error("Failed to update office hour");
             return;
         }
 
         toast({
             title: "Success!",
-            description: "Office hours created successfully.",
+            description: "Office hours updated successfully.",
             variant: "success",
         })
-        console.log("Course and office hour created successfully");
+        console.log("Course and office hour updated successfully");
         await queryClient.invalidateQueries({ queryKey: ['officeHours'] });
     }
     return (
