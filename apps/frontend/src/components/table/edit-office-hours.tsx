@@ -34,18 +34,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
 const formSchema = z.object({
-    course_id: z.number().min(1, {
-        message: "Course ID is required.",
-    }),
-    course_code: z.string()
-        .min(1, { message: "Course code is required." })
-        .regex(
-            /^[A-Z]{3}[0-9]{4}C?$/,
-            'Course code must be 3 uppercase letters followed by 4 numbers, with optional C at end (e.g., COP3503 or COP3503C)'
-        ),
-    title: z.string().min(1, {
-        message: "Course title is required.",
-    }),
     host: z.string().min(1, {
         message: "Field cannot be empty.",
     }),
@@ -145,7 +133,14 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
     const mode = form.watch("mode")
 
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
-        const officeHour = await updateOfficeHour(data);
+        if (data.mode === "in-person") {
+            data.link = ""
+        }
+        if (data.mode === "remote") {
+            data.location = ""
+        }
+
+        const officeHour = await updateOfficeHour(row.id, data);
         if (!officeHour) {
             console.error("Failed to update office hour");
             return;
@@ -174,9 +169,6 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                     </DialogHeader>
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 flex flex-col">
-                            <input type="hidden" {...form.register('course_id')} />
-
-                            {/* Rest of the form fields remain unchanged */}
                             <FormField
                                 control={form.control}
                                 name="host"

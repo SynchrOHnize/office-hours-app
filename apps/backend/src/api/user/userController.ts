@@ -254,7 +254,7 @@ export class UserController {
     res: Response
   ) => {
     const userId = req.auth.userId;
-    const officeHourId = Number(req.params.officeHourId);
+    const officeHourId = Number(req.params.office_hour_id);
     const serviceResponse = await this.officeHourService.updateOfficeHour(
       officeHourId,
       req.body,

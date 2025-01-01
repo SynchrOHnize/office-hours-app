@@ -86,7 +86,6 @@ userRouter.delete(
 userRouter.put(
   "/office-hours/:office_hour_id",
   adminAuth(userService),
-  validateRequest(PostOfficeHourSchema),
   userController.updateOfficeHour
 );
 
