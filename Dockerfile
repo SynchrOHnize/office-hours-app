@@ -15,8 +15,8 @@ RUN bun install
 COPY . .
 
 # Build both applications
-RUN cd apps/frontend && bun run build
-RUN cd apps/backend && bun run build
+RUN cd apps/frontend && NODE_ENV=production BUN_ENV_FILE=apps/frontend/.env.production bun run build
+RUN cd apps/backend && NODE_ENV=production BUN_ENV_FILE=apps/backend/.env.production bun run build
 
 # Production image
 FROM oven/bun:slim

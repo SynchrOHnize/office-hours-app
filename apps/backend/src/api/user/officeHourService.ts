@@ -178,7 +178,7 @@ export class OfficeHourService {
       return ServiceResponse.failure("An error occurred while storing the office hour", null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   }
-
+  
   async storeListOfficeHour(data: z.infer<typeof OfficeHourSchema>[], userId: string): Promise<ServiceResponse<OfficeHour[] | null>> {
     try {
       const officeHours = await this.officeHourRepository.storeListOfficeHours(data, userId);
@@ -189,4 +189,16 @@ export class OfficeHourService {
       return ServiceResponse.failure("An error occurred while storing the office hours", null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   }
+
+    async updateOfficeHour(id: number, data: z.infer<typeof OfficeHourSchema>, userId: string): Promise<ServiceResponse<OfficeHour | null>> {
+      try {
+        const officeHour = await this.officeHourRepository.updateOfficeHour(id, data, userId);
+        return ServiceResponse.success("Office hour updated successfully", officeHour);
+      } catch (ex) {
+        const errorMessage = `Error storing office hours: ${(ex as Error).message}`;
+        logger.error(errorMessage);
+        return ServiceResponse.failure("An error occurred while storing the office hours", null, StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+    }
+
 }
