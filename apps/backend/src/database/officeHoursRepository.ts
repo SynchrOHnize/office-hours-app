@@ -1,6 +1,7 @@
 import { OfficeHour, OfficeHourSchema } from "@/common/schemas/officeHoursSchema";
 import { FieldPacket, Pool, ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import { z } from "zod";
+import { parse } from "date-fns";
 
 export class OfficeHourRepository {
   private db: Pool;
@@ -167,11 +168,21 @@ export class OfficeHourRepository {
     return updated[0] as OfficeHour;
   }
 
-  async deleteOfficeHours(ids: string, userId: string): Promise<{ affectedRows: number }> {
-    const [result] = await this.db.execute<ResultSetHeader>(
-      "UPDATE office_hours SET is_deleted = true, updated_by = ? WHERE id IN (?) AND is_deleted = false",
-      [userId, ids]
-    );
+  async deleteOfficeHours(ids: number[], userId: string): Promise<{ affectedRows: number }> {
+    if (ids.length === 0) {
+      return { affectedRows: 0 }; // No IDs to update
+    }
+
+    // Dynamically create placeholders for the `IN` clause
+    const placeholders = ids.map(() => "?").join(","); // e.g., "?, ?, ?"
+    const query = `UPDATE office_hours SET is_deleted = true, updated_by = ? WHERE id IN (${placeholders}) AND is_deleted = false`;
+
+    // Combine userId and ids into a single array for the query parameters
+    const params = [userId, ...ids];
+
+    // Execute the query
+    const [result] = await this.db.execute<ResultSetHeader>(query, params);
+
     return { affectedRows: result.affectedRows };
-}
+  }
 }

@@ -13,18 +13,85 @@ export class AIService {
     this.llm = new ChatOpenAI({ modelName: "gpt-4o" });
   }
 
+  formatData(officeHour: Record<string, any>) {
+    const isValidUrl = (url: string) => {
+      try {
+        new URL(url);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    officeHour.day = officeHour.day.charAt(0).toUpperCase() + officeHour.day.slice(1);
+    officeHour.mode = officeHour.mode.charAt(0).toUpperCase() + officeHour.mode.slice(1);
+    officeHour.start_time = officeHour.start_time.toUpperCase();
+    officeHour.end_time = officeHour.end_time.toUpperCase();
+
+    // Validate 'host'
+    if (!officeHour.host || typeof officeHour.host !== "string" || officeHour.host.trim() === "") {
+      officeHour.host = "INVALID";
+    }
+
+    // Validate 'day'
+    if (!["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].includes(officeHour.day)) {
+      officeHour.day = "INVALID";
+    }
+
+    // Validate 'start_time' and 'end_time' as HH:mm format
+    const timeRegex = /^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$/;
+    if (!timeRegex.test(officeHour.start_time)) {
+      officeHour.start_time = "INVALID";
+    }
+    if (!timeRegex.test(officeHour.end_time)) {
+      officeHour.end_time = "INVALID";
+    }
+
+    // Validate 'mode'
+    if (!["In-person", "Remote", "Hybrid"].includes(officeHour.mode)) {
+      officeHour.mode = "INVALID";
+    }
+
+    // Validate 'location' and 'link' based on 'mode'
+    if (officeHour.mode === "Remote") {
+      // Remote: Requires valid link and no location
+      if (!officeHour.link || !isValidUrl(officeHour.link)) {
+        officeHour.link = "INVALID";
+      }
+      officeHour.location = "";
+    } else if (officeHour.mode === "In-person") {
+      // In-person: Requires location and no link
+      if (!officeHour.location || !/^[A-Z]+[0-9]+$/.test(officeHour.location)) {
+        officeHour.location = "INVALID";
+      }
+      officeHour.link = "";
+    } else if (officeHour.mode === "Hybrid") {
+      // Hybrid: Requires both valid link and location
+      if (!officeHour.link || !isValidUrl(officeHour.link)) {
+        officeHour.link = "INVALID";
+      }
+      if (!officeHour.location || !/^[A-Z]+[0-9]+$/.test(officeHour.location)) {
+        officeHour.location = "INVALID";
+      }
+    }
+
+    return officeHour;
+  }
+
   async parseOfficeHours(courseId: number, rawData: string) {
-    const template = `Parse the user's given office hours data into a list of objects with this schema:
+    const template = `Parse the given data into a list of objects with this schema:
   {{
     "host": string,
-    "day": "monday" | "tuesday" | "wednesday" | "thursday" | "friday",
-    "start_time": "HH:mm",
-    "end_time": "HH:mm",
-    "mode": "in-person" | "remote" | "hybrid",
+    "day": "sunday" | "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" (allow any casing),
+    "start_time": "HH:mm PM/AM" (convert time to this format),
+    "end_time": "HH:mm PM/AM" (convert time to this format),
+    "mode": "in-person" | "remote" | "hybrid" (allow any casing or deduce),
     "location": string,
-    "link": string
+    "link": string,
   }}
-  Return only valid JSON array.`
+  Link is only empty if mode is "in-person". Location is only empty if mode is "remote". Hybrid requires both.
+  Location must be uppercase letters followed by numbers (e.g., MALA5200). Set as "INVALID" if not explicitly given in this format.
+  Return only valid JSON array. Allow missing or incorrect data, simply set the value as "INVALID". Include as much information as possible. You should almost never return empty unless there is truly no information.`;
 
     try {
       const prompt = ChatPromptTemplate.fromMessages([
@@ -34,11 +101,13 @@ export class AIService {
       const outputParser = new StringOutputParser();
       const chain = prompt.pipe(this.llm).pipe(outputParser);
       let response = await chain.invoke({ courseId, rawData });
-      response = response.replace(/```json\n?|\n?```/g, '');
+      response = response.replace(/```json\n?|\n?```/g, "");
       const parsed = JSON.parse(response);
 
-      for (const officeHour of parsed) {
+      for (let officeHour of parsed) {
         officeHour.course_id = courseId;
+        console.log(officeHour);
+        officeHour = this.formatData(officeHour);
       }
 
       return ServiceResponse.success("Successfully parsed office hours", parsed);

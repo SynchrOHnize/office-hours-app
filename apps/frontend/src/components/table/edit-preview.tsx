@@ -29,9 +29,7 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { TimeField } from "../ui/time-field";
-import { updateOfficeHour } from "@/services/userService";
 import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
 
 const formSchema = z.object({
     host: z.string().min(1, {
@@ -51,11 +49,11 @@ const formSchema = z.object({
     }),
     location: z.union([
         z
-            .string()
-            .regex(/^[A-Z]+[0-9]+$/, "Location must be uppercase letters followed by numbers (e.g., MALA5200)")
-            .optional(),
+          .string()
+          .regex(/^[A-Z]+[0-9]+$/, "Location must be uppercase letters followed by numbers (e.g., MALA5200)")
+          .optional(),
         z.string().length(0),
-    ]),
+      ]),
     link: z.union([
         z.string().url(),
         z.string().length(0),
@@ -95,8 +93,6 @@ const formSchema = z.object({
     }
 });
 
-// Time is currently stored as a string in 12-hour format (e.g., "12:00 PM")
-// But TimeField component expects time in 24-hour format (e.g., "12:00")
 function convertTo24Hour(time12h: string): string {
     const [time, modifier] = time12h.split(' ');
 
@@ -110,15 +106,19 @@ function convertTo24Hour(time12h: string): string {
         hours = (parseInt(hours, 10) + 12).toString();
     }
 
-    const formatted = `${hours.padStart(2, '0')}:${minutes}`
-
-    return formatted;
+    return `${hours.padStart(2, '0')}:${minutes}`;
 }
 
-export function EditOfficeHoursForm({ row }: { row: any }) {
-    const { toast } = useToast();
-    const queryClient = useQueryClient();
+function convertTo12Hour(time24h: string): string {
+    const [hours, minutes] = time24h.split(':');
+    const hour = parseInt(hours, 10);
+    const modifier = hour < 12 ? 'AM' : 'PM';
+    const twelveHour = hour % 12 || 12;
+    return `${twelveHour}:${minutes} ${modifier}`;
+}
 
+export function EditPreview({ row }: { row: any }) {
+    const { toast } = useToast();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -129,37 +129,26 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
             end_time: (convertTo24Hour(row.end_time) || "").toLowerCase(),
             mode: (row.mode || "").toLowerCase(),
             location: row.location || "",
-            link: (row.link || "").toLowerCase(),
+            link: row.link || "",
         },
     });
 
+    const mode = form.watch("mode");
 
-    const mode = form.watch("mode")
-
-    const onSubmit = async (data: z.infer<typeof formSchema>) => {
-        if (data.mode === "in-person") {
-            data.link = ""
-        }
-        if (data.mode === "remote") {
-            data.location = ""
-        }
-
-        const officeHour = await updateOfficeHour(row.id, data);
-        if (!officeHour) {
-            console.error("Failed to update office hour");
-            return;
-        }
-
+    const onSubmit = (data: z.infer<typeof formSchema>) => {
+        const updatedData = {
+            ...data,
+            start_time: convertTo12Hour(data.start_time),
+            end_time: convertTo12Hour(data.end_time),
+        };
+        Object.assign(row, updatedData);
         toast({
             title: "Success!",
             description: "Office hours updated successfully.",
             variant: "success",
-        })
-        console.log("Course and office hour updated successfully");
-        await queryClient.invalidateQueries({ queryKey: ['officeHours'] });
-        window.location.reload();
+        });
+    };
 
-    }
     return (
         <>
             <Dialog>
@@ -192,9 +181,8 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                             <FormField
                                 control={form.control}
                                 name="day"
-                                render={({ field }) => {
-                                    // console.log(field.value)
-                                    return <FormItem>
+                                render={({ field }) => (
+                                    <FormItem>
                                         <FormLabel>Day of the week:</FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value}>
                                             <FormControl>
@@ -214,7 +202,7 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                                         </Select>
                                         <FormMessage />
                                     </FormItem>
-                                }}
+                                )}
                             />
 
                             <div className="grid grid-cols-2 gap-4">
@@ -256,14 +244,13 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                             <FormField
                                 control={form.control}
                                 name="mode"
-                                render={({ field }) => {
-                                    // console.log(field.value)
-                                    return <FormItem>
+                                render={({ field }) => (
+                                    <FormItem>
                                         <FormLabel>Modality:</FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Select a modality..." />
+                                                    <SelectValue placeholder="Select a modality..."/>
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
@@ -274,7 +261,7 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                                         </Select>
                                         <FormMessage />
                                     </FormItem>
-                                }}
+                                )}
                             />
 
                             {["in-person", "hybrid"].includes(mode) && (
@@ -301,7 +288,7 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                                         <FormItem>
                                             <FormLabel>Link</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Example: https://ufl.zoom.us/j/123456789" {...field} />
+                                                <Input placeholder="Example: https://ufl.zoom.us/j/123456789" {...field}/>
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>

@@ -1,3 +1,4 @@
+import { AxiosResponse } from "axios";
 import api from "./api";
 
 export interface User {
@@ -41,8 +42,6 @@ export interface Course {
   course_id: number;
   course_code: string;
   title: string;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface Payload {
@@ -160,6 +159,8 @@ export const fetchOfficeHours = async (): Promise<OfficeHour[]> => {
   }
 };
 
+
+
 export const sendFeedback = async (rating: number, content: string): Promise<Payload | null> => {
   try {
     const response = await api.post(`/users/feedback`, {
@@ -199,7 +200,8 @@ export const getIcalFileByIds = async(ids: number[]): Promise<Payload | null> =>
   }
 }
 
-export const storeOfficeHour = async (officeHour: Record<string, any>): Promise<Payload | null> => {
+export const storeOfficeHour = async (courseId: number, officeHour: Record<string, any>): Promise<Payload | null> => {
+  officeHour.course_id = courseId;
   try {
     const response = await api.post(`/users/office-hours`, officeHour);
     const payload = response.data;
@@ -210,16 +212,35 @@ export const storeOfficeHour = async (officeHour: Record<string, any>): Promise<
   }
 }
 
-export const parseOfficeHours = async (course_id: number, raw_data: string): Promise<PreviewOfficeHour[] | null> => {
+export const storeOfficeHourList = async (officeHours: Record<string, any>[]): Promise<Payload | null> => {
   try {
-    const response = await api.post(`/ai/office-hours`, {raw_data, course_id})
+    const response = await api.post(`/users/office-hours-list`, officeHours);
     const payload = response.data;
-    return payload.data;
-  } catch(error) {
-    console.error("Error with parsing office hours through AI:", error);
+    return payload;
+  } catch (error) {
+    console.error("Error storing office hour list:", error);
     return null;
   }
 }
+
+export const parseOfficeHours = async (
+  course_id: number,
+  raw_data: string
+): Promise<AxiosResponse | null> => {
+  try {
+    const response = await api.post(`/ai/office-hours`, { raw_data, course_id });
+    return response; // Return the full AxiosResponse object
+  } catch (error: any) {
+    if (error.response) {
+      // Return the error response if it exists
+      return error.response;
+    } else {
+      // Log and return null for unexpected errors
+      console.error("Unexpected error while parsing office hours:", error);
+      return null;
+    }
+  }
+};
 
 export const updateOfficeHour = async (id: number, officeHour: Record<string, any>): Promise<Payload | null> => {
   console.log(officeHour.id)

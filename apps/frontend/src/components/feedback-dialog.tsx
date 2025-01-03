@@ -13,7 +13,7 @@ import { FaStar } from "react-icons/fa";
 import { sendFeedback } from "@/services/userService";
 import toast from "react-hot-toast";
 
-const  FeedbackDialog = () => {
+export const FeedbackDialog = () => {
     const [rating, setRating] = useState<number>(0);
     const [hover, setHover] = useState<number>(0);
     const [feedback, setFeedback] = useState<string>("");
@@ -43,7 +43,6 @@ const  FeedbackDialog = () => {
     return (
         <>
             <Dialog>
-                {/* <DialogTrigger className="p-3 rounded-full hover:bg-accent hover:text-muted-foreground transition-all">Leave Feedback</DialogTrigger> */}
                 <DialogTrigger className="hover:text-muted-foreground">Leave Feedback</DialogTrigger>
                 <DialogContent>
                     <DialogHeader>
@@ -86,5 +85,3 @@ const  FeedbackDialog = () => {
         </>
     );
 };
-
-export default FeedbackDialog;

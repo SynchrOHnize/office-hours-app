@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button"
 
 import { TruncatedText } from "@/components/ui/truncated-text"
 
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-
 import {
     AlertDialog,
     AlertDialogAction,
@@ -30,7 +28,6 @@ import {
     getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
-    Row,
 } from "@tanstack/react-table"
 
 import {
@@ -52,8 +49,6 @@ import { Filter, Trash } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 
-import { Edit } from "lucide-react"
-
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
     data: TData[]
@@ -69,13 +64,13 @@ export function DataTable<TData, TValue>({
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
-    const [editRow, setEditRow] = React.useState<Row<TData> | null>(null)
     const { toast } = useToast()
 
     const { refetch } = useQuery({
         queryKey: ['officeHours'],
         queryFn: fetchOfficeHours,
     });
+
     const { data: userCourses = [] } = useQuery({
         queryKey: ['userCourses'],
         queryFn: fetchUserCourses,
@@ -109,7 +104,7 @@ export function DataTable<TData, TValue>({
         if (Object.keys(rowSelection).length === 0) {
             toast({
                 title: "Error",
-                description: "No rows selected",
+                description: "No rows selected.",
                 variant: "destructive",
                 duration: 2000,
             });
@@ -166,7 +161,7 @@ export function DataTable<TData, TValue>({
         if (Object.keys(rowSelection).length === 0) {
             toast({
                 title: "Error",
-                description: "No rows selected",
+                description: "No rows selected.",
                 variant: "destructive",
                 duration: 2000,
             });
@@ -181,12 +176,6 @@ export function DataTable<TData, TValue>({
         await refetch()
         setRowSelection({})
     };
-
-    const handleEditClick = (row: Row<TData>) => {
-        // console.log("Row data:", row.original);
-        setEditRow(row);
-    };
-
 
     const DeleteButton = () => {
         const numSelected = Object.keys(rowSelection).length;
@@ -328,10 +317,7 @@ export function DataTable<TData, TValue>({
 
                                     {admin && (
                                         <TableCell>
-                                            {/* <Button variant="outline" size="sm" onClick={() => handleEditClick(row)}>
-                                            <Edit className="h-4 w-4" />
-                                        </Button> */}
-                                            {admin && <EditOfficeHoursForm row={row.original} />}
+                                            <EditOfficeHoursForm row={row.original} />
                                         </TableCell>
                                     )}
                                 </TableRow>

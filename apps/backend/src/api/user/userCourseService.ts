@@ -56,7 +56,6 @@ export class UserCourseService {
   async getByCourseId(course_id: number): Promise<ServiceResponse<Course | null>> {
     try {
       const course = await this.courseRepository.getByCourseId(course_id);
-      console.log(course);
       if (!course) {
         return ServiceResponse.failure("No Course found", null, StatusCodes.NOT_FOUND);
       }

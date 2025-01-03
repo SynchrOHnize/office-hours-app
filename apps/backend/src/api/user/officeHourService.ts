@@ -24,7 +24,7 @@ export class OfficeHourService {
     const officeHourDate = new Date();
     officeHourDate.setDate(today.getDate() + ((office_hour_day_index - index_of_today + 7) % 7 || 7));
 
-    const [time_str, am_pm] = time.split(" ");
+    const [time_str, am_pm] = time.toLowerCase().split(" ");
     let [hours, minutes] = time_str.split(":").map(Number);
 
     if (am_pm === "pm" && hours !== 12) {
@@ -70,14 +70,15 @@ export class OfficeHourService {
   }
 
   async deleteOfficeHours(officeHourIds: string, userId: string): Promise<ServiceResponse<{ deletedCount: number }>> {
+    const ids = officeHourIds.split(",").map(Number);
     try {
-      const result = await this.officeHourRepository.deleteOfficeHours(officeHourIds, userId);
+      const result = await this.officeHourRepository.deleteOfficeHours(ids, userId);
 
       if (result.affectedRows === 0) {
         return ServiceResponse.failure("No office hours were found to delete", { deletedCount: 0 }, StatusCodes.NOT_FOUND);
       }
 
-      return ServiceResponse.success(`Successfully deleted ${result.affectedRows} office hour(s)`, { deletedCount: result.affectedRows });
+      return ServiceResponse.success(`Successfully deleted ${result.affectedRows} office hours`, { deletedCount: result.affectedRows });
     } catch (ex) {
       const errorMessage = `Error deleting office hours: ${(ex as Error).message}`;
       logger.error(errorMessage);

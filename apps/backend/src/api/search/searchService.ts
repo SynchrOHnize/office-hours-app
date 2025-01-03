@@ -89,11 +89,23 @@ export class SearchService {
             return ServiceResponse.failure("No response received from catalog", null, StatusCodes.NOT_FOUND);
         }
 
+        response.data.results = response.data.results.slice(0, 50);
+
+        response.data.results = response.data.results.filter((result: Record<string, any>) => {
+          const code = (result.code || "").toUpperCase();
+          const title = (result.title || "").toUpperCase();
+          return (
+            code.includes(formattedKeyword.toUpperCase()) ||
+            title.includes(formattedKeyword.toUpperCase())
+          );
+        });
+        
+
+        // If the original keyword was a course code, and there are multiple results, filter to only the exact match
         if (keyword !== formattedKeyword && response.data.count > 1) {
           response.data.count = 1;
           response.data.results = [response.data.results[0]];
         }
-
 
         return ServiceResponse.success("Classes found", response.data);
     } catch (ex) {

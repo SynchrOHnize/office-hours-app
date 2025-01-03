@@ -2,10 +2,7 @@ import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
 extendZodWithOpenApi(z);
 
-const timeSchema = z.string().refine(
-  (time) => !isNaN(Date.parse(`2000/01/01 ${time}`)),
-  "Must be a valid time"
-);
+const timeSchema = z.string().refine((time) => !isNaN(Date.parse(`2000/01/01 ${time}`)), "Must be a valid time");
 
 export const OfficeHourSchema = z
   .object({
@@ -15,11 +12,14 @@ export const OfficeHourSchema = z
     start_time: timeSchema,
     end_time: timeSchema,
     mode: z.enum(["in-person", "remote", "hybrid"]),
-    location: z
-      .string()
-      .regex(/^[A-Z]+[0-9]+$/, "Location must be in format LETTERS followed by NUMBERS")
-      .optional(),
-    link: z.string().url("Must be a valid URL").optional(),
+    location: z.union([
+      z
+        .string()
+        .regex(/^[A-Z]+[0-9]+$/, "Location must be uppercase letters followed by numbers (e.g., MALA5200)")
+        .optional(),
+      z.string().length(0),
+    ]),
+    link: z.union([z.string().url(), z.string().length(0)]).optional(),
   })
   .superRefine((data, ctx) => {
     const requireLocation = ["in-person", "hybrid"].includes(data.mode) && !data.location;
@@ -49,6 +49,5 @@ export const PostOfficeHourSchema = z.object({
 });
 
 export const PostListOfficeHourSchema = z.object({
-  body: z.array(OfficeHourSchema)
+  body: z.array(OfficeHourSchema),
 });
-
