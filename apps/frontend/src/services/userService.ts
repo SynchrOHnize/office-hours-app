@@ -27,6 +27,16 @@ export interface OfficeHour {
   updated_at: string;
 }
 
+export interface PreviewOfficeHour {
+  host: string;
+  day: string;
+  start_time: string;
+  end_time: string;
+  mode: string;
+  location: string;
+  link: string;
+}
+
 export interface Course {
   course_id: number;
   course_code: string;
@@ -196,6 +206,17 @@ export const storeOfficeHour = async (officeHour: Record<string, any>): Promise<
     return payload;
   } catch (error) {
     console.error("Error storing office hour:", error);
+    return null;
+  }
+}
+
+export const parseOfficeHours = async (course_id: number, raw_data: string): Promise<PreviewOfficeHour[] | null> => {
+  try {
+    const response = await api.post(`/ai/office-hours`, {raw_data, course_id})
+    const payload = response.data;
+    return payload.data;
+  } catch(error) {
+    console.error("Error with parsing office hours through AI:", error);
     return null;
   }
 }
