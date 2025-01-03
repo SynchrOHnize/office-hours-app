@@ -49,11 +49,10 @@ const formSchema = z.object({
     mode: z.enum(["in-person", "remote", "hybrid"], {
         required_error: "You need to select a mode.",
     }),
-    location: z.string()
-        .regex(
-            /^[A-Z]+[0-9]+$/,
-            'Location must be uppercase letters followed by numbers (e.g., MALA5200)'
-        ).optional(),
+    location: z.union([
+        z.string().regex(/^[A-Z]+[0-9]+$/, 'Location must be uppercase letters followed by numbers (e.g., MALA5200)').optional(),
+        z.string().length(0)
+    ]),
     link: z.union([
         z.string().url(),
         z.string().length(0),
@@ -114,8 +113,8 @@ function convertTo24Hour(time12h: string): string {
 export function EditOfficeHoursForm({ row }: { row: any }) {
     const { toast } = useToast();
     const queryClient = useQueryClient();
-    
-    
+
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -129,7 +128,7 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
         },
     });
 
-    
+
     const mode = form.watch("mode")
 
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
@@ -157,9 +156,9 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
     return (
         <>
             <Dialog>
-            <DialogTrigger className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-1 text-sm font-medium border border-gray-700 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900">
-                <Edit className="h-4 w-4" />
-            </DialogTrigger>
+                <DialogTrigger className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-1 text-sm font-medium border border-gray-700 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                    <Edit className="h-4 w-4" />
+                </DialogTrigger>
                 <DialogContent className="min-w-96 overflow-y-scroll max-h-screen">
                     <DialogHeader>
                         <DialogTitle className="text-center text-xl">Edit Office Hours</DialogTitle>
@@ -257,7 +256,7 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                                         <Select onValueChange={field.onChange} value={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Select a modality..."/>
+                                                    <SelectValue placeholder="Select a modality..." />
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
@@ -295,7 +294,7 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                                         <FormItem>
                                             <FormLabel>Link</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Example: https://ufl.zoom.us/j/123456789" {...field}/>
+                                                <Input placeholder="Example: https://ufl.zoom.us/j/123456789" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>

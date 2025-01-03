@@ -74,11 +74,10 @@ const formSchema = z.object({
     mode: z.enum(["in-person", "remote", "hybrid"], {
         required_error: "You need to select a mode.",
     }),
-    location: z.string()
-        .regex(
-            /^[A-Z]+[0-9]+$/,
-            'Location must be uppercase letters followed by numbers (e.g., MALA5200)'
-        ).optional(),
+    location: z.union([
+        z.string().regex(/^[A-Z]+[0-9]+$/, 'Location must be uppercase letters followed by numbers (e.g., MALA5200)').optional(),
+        z.string().length(0)
+    ]),
     link: z.union([
         z.string().url(),
         z.string().length(0),
