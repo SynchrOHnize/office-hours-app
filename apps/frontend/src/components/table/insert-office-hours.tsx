@@ -38,10 +38,13 @@ import {
     CommandList
 } from "@/components/ui/command"
 import { TimeField } from "../ui/time-field";
-import { fetchCourseById, storeCourse, storeOfficeHour } from "@/services/userService";
+import { fetchCourseById, OfficeHour, PreviewOfficeHour, storeCourse, storeOfficeHour } from "@/services/userService";
 import { parseOfficeHours } from "@/services/userService";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
+import { Textarea } from "../ui/textarea";
+import { PreviewTable } from "./preview-table";
 
 const formSchema = z.object({
     course_id: z.number().min(1, {
@@ -120,21 +123,21 @@ const textSchema = z.object({
         message: "Course ID is required.",
     }),
     course_code: z.string()
-    .min(1, { message: "Course code is required." })
-    .regex(
-        /^[A-Z]{3}[0-9]{4}C?$/,
-        'Course code must be 3 uppercase letters followed by 4 numbers, with optional C at end (e.g., COP3503 or COP3503C)'
-    ),
+        .min(1, { message: "Course code is required." })
+        .regex(
+            /^[A-Z]{3}[0-9]{4}C?$/,
+            'Course code must be 3 uppercase letters followed by 4 numbers, with optional C at end (e.g., COP3503 or COP3503C)'
+        ),
     title: z.string().min(1, {
         message: "Course title is required.",
     }),
-    inputted_text: z.string().min(1, { 
+    inputted_text: z.string().min(1, {
         message: "Inputted text cannot be empty",
     }),
 })
 
 export function InsertOfficeHoursForm() {
-    const [formOrText, setFormOrText] = useState(true); // True = form style, False = text style
+    const [isForm, setIsForm] = useState(true); // True = form style, False = text style
 
     return (
         <>
@@ -143,19 +146,25 @@ export function InsertOfficeHoursForm() {
                     Insert
                     <Plus className="h-4 w-4" />
                 </DialogTrigger>
-                <DialogContent className="min-w-96 overflow-y-scroll max-h-screen">
+                <DialogContent className={cn("overflow-y-scroll max-h-screen", isForm ? "max-w-xl" : "max-w-4xl")}>
                     <DialogHeader>
                         <DialogTitle className="text-center text-xl">Create Office Hours</DialogTitle>
                         <DialogDescription className="text-center text-sm text-slate-40">
                             If you are seeing this, it means you are a verified TA or instructor at UF.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="inline-flex items-center justify-center gap-10">
-                        <Button onClick={ () => setFormOrText(true) }>Form Style</Button> 
-                        <Button onClick={ () => setFormOrText(false) }>Text Style</Button>
+                    <div className="grid grid-cols-2 grid-rows-2 text-center max-w-xs m-auto">
+                        <Button variant={"ghost"} onClick={() => setIsForm(true)} className={cn(isForm ? "font-bold" : "", "text-md")}>
+                            Form Style
+                        </Button>
+                        <Button variant={"ghost"} onClick={() => setIsForm(false)} className={cn(!isForm ? "font-bold" : "", "text-md")}>
+                            Parse with AI
+                        </Button>
+                        <span></span>
+                        <span className={"text-xs"}>(Recommended)</span>
                     </div>
-                    {formOrText && OfficeHourFormStyle()}
-                    {!formOrText && OfficeHourTextStyle()}
+                    {isForm && <OfficeHourFormStyle />}
+                    {!isForm && <OfficeHourTextStyle />}
                 </DialogContent>
             </Dialog>
         </>
@@ -475,6 +484,7 @@ export function OfficeHourFormStyle() {
 
 export function OfficeHourTextStyle() {
     const [searchResults, setSearchResults] = useState<SearchClass[]>([]);
+    const [parsedResults, setParsedResults] = useState<PreviewOfficeHour[]>([]);
     const [isFocused, setIsFocused] = useState(false);
     const { toast } = useToast();
     const queryClient = useQueryClient();
@@ -484,7 +494,7 @@ export function OfficeHourTextStyle() {
         defaultValues: {
             course_code: "",
             title: "",
-            inputted_text:"",
+            inputted_text: "",
         },
     })
 
@@ -512,24 +522,45 @@ export function OfficeHourTextStyle() {
 
     const onSubmit = async (data: z.infer<typeof textSchema>) => {
 
-        // const existingCourse = await fetchCourseById(data.course_id);
-        // if (!existingCourse) {
-        //     const course = await storeCourse(data);
-        //     if (!course) {
-        //         console.error("Failed to create course");
-        //         return;
-        //     }
-        //     await queryClient.invalidateQueries({ queryKey: ['courses'] });
-        // }
+        const existingCourse = await fetchCourseById(data.course_id);
+        if (!existingCourse) {
+            const course = await storeCourse(data);
+            if (!course) {
+                console.error("Failed to create course");
+                return;
+            }
+            await queryClient.invalidateQueries({ queryKey: ['courses'] });
+        }
 
-        const officeHour = await parseOfficeHours(data);
-        if (!officeHour) {
+        let officeHours = await parseOfficeHours(data.course_id, data.inputted_text);
+        if (!officeHours) {
             console.error("Failed to create office hour");
+            toast({
+                title: "Error!",
+                description: "Please ensure the text has all fields for each data point.",
+                variant: "destructive",
+            })
             return;
         }
-        await storeOfficeHour(officeHour);
 
-        // await resetForm();
+        officeHours = officeHours.map(item => ({
+            ...item,
+            day: item.day.charAt(0).toUpperCase() + item.day.slice(1),
+            mode: item.mode.charAt(0).toUpperCase() + item.mode.slice(1),
+            start_time: new Date(`2000-01-01T${item.start_time}`).toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true
+            }),
+            end_time: new Date(`2000-01-01T${item.end_time}`).toLocaleTimeString('en-US', {
+              hour: 'numeric', 
+              minute: '2-digit',
+              hour12: true
+            })
+          }))
+
+        setParsedResults(officeHours);
+        
         toast({
             title: "Success!",
             description: "Office hours parsed successfully.",
@@ -572,16 +603,16 @@ export function OfficeHourTextStyle() {
                                         }}
                                     />
                                     {searchResults.length > 0 && isFocused && (
-                                        <Command className="h-[300px] absolute top-full left-0 right-0 z-50 mt-1 border rounded-md bg-popover">
+                                        <Command className="max-h-[300px] absolute top-full left-0 right-0 z-50 mt-1 border rounded-md bg-popover">
                                             <CommandList>
-                                                <CommandGroup>
+                                                <CommandGroup className="max-h-[200px] overflow-auto">
                                                     {searchResults.map((result) => (
                                                         <CommandItem
                                                             key={result.key}
                                                             onSelect={() => handleSelectClass(result)}
                                                             className="cursor-pointer"
                                                         >
-                                                            <span>{result.code} - {result.title}</span>
+                                                            <span>{result.code.replace(/\s+/g, '')} - {result.title}</span>
                                                         </CommandItem>
                                                     ))}
                                                 </CommandGroup>
@@ -623,14 +654,17 @@ export function OfficeHourTextStyle() {
                     name="inputted_text"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Office Hours in Text Format</FormLabel>
+                            <FormLabel>Raw Text</FormLabel>
                             <FormControl>
-                                <Input placeholder="Text containing your office hours..." {...field}/>
+                                <Textarea placeholder="Copy and paste raw text containing your office hours. Commonly found in Canvas Syllabus, Files, or Announcements." {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
                     )}
                 />
+                
+                {parsedResults.length > 0 && <PreviewTable data={parsedResults} />}
+
 
                 <hr className="my-4 border-dotted border-1 border-gray-300" />
                 <Button type="submit">Submit</Button>

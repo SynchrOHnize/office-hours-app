@@ -9,6 +9,7 @@ import {
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -62,7 +63,7 @@ export const AddCourseInput = ({
     const handleSelect = async (value: string) => {
         console.log(value)
         if (!userCourseCodes.includes(value)) {
-            let course = allCourses.find(c => 
+            let course = allCourses.find(c =>
                 value.includes(c.course_code) && value.includes(c.title)
             );
             if (course) {
@@ -118,6 +119,9 @@ export const AddCourseInput = ({
             <DialogContent className="max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>Select Courses</DialogTitle>
+                    <DialogDescription>
+                        Add the courses you are taking this semester.
+                    </DialogDescription>
                 </DialogHeader>
                 <div className={cn(userCourseCodes.length > 0 && "w-full")}>
                     <Command className="rounded-lg border shadow-md">

@@ -1,6 +1,5 @@
 // aiController.ts
 import { type Request, type Response } from "express";
-import { ServiceResponse } from "@/common/schemas/serviceResponse";
 import { AIService } from "./aiService";
 import { handleServiceResponse } from "@/common/utils/httpHandlers";
 

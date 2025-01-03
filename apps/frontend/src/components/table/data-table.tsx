@@ -2,12 +2,10 @@ import * as React from "react"
 import { DataTablePagination } from "@/components/ui/data-table-pagination"
 import { DataTableViewOptions } from "@/components/ui/data-table-view-options"
 import { Button } from "@/components/ui/button"
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip"
+
+import { TruncatedText } from "@/components/ui/truncated-text"
+
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 import {
     AlertDialog,
@@ -194,70 +192,45 @@ export function DataTable<TData, TValue>({
         const numSelected = Object.keys(rowSelection).length;
 
         return (
-            <TooltipProvider>
-                <Tooltip delayDuration={0}>
-                    {numSelected === 0 ? (
-                        <TooltipTrigger className="cursor-not-allowed">
-                            <Button variant="destructive" size="sm" disabled>
-                                Delete
+            <>
+                {numSelected === 0 ? (
+                    <Button variant="destructive" size="sm" disabled>
+                        Delete
+                        <Trash className="h-4 w-4" />
+                    </Button>
+                ) : (
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                            >
+                                Delete {numSelected} Selected
                                 <Trash className="h-4 w-4" />
-                            </Button>
-                        </TooltipTrigger>
-                    ) : (
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button
-                                    variant="destructive"
-                                    size="sm"
-                                >
-                                    Delete {numSelected} Selected
-                                    <Trash className="h-4 w-4" />
 
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        This will permanently delete {numSelected} selected office hours.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleDeleteClick} className="bg-red-500 hover:bg-red-700">
-                                        Delete
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    )}
-                    <TooltipContent>
-                        <p>Please select rows to delete</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This will permanently delete {numSelected} selected office hours.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDeleteClick} className="bg-red-500 hover:bg-red-700">
+                                    Delete
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                )}
+            </>
         )
     };
 
-    const TruncatedLink = ({ link }: { link: string }) => {
-        if (!link) return null;
-        const truncatedText = link.length > 30 ? link.substring(0, 30) + '...' : link;
-
-        return (
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger className="text-left">
-                        {truncatedText}
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p className="max-w-xs break-all">{link}</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-        );
-    };
-
-    console.log(table.getHeaderGroups()) // TODO Testing, Remove
+    console.log(table.getHeaderGroups()) // TODO: Testing, Remove
 
     return (
         <div className={cn(table.getRowModel().rows?.length === 0 && "max-w-screen-lg")}>
@@ -346,7 +319,7 @@ export function DataTable<TData, TValue>({
                                         <TableCell key={cell.id}>
                                             {/* Special handling for link columns */}
                                             {cell.column.id === 'link' ? (
-                                                <TruncatedLink link={cell.getValue() as string} />
+                                                <TruncatedText text={cell.getValue() as string} />
                                             ) : (
                                                 flexRender(cell.column.columnDef.cell, cell.getContext())
                                             )}
@@ -354,12 +327,12 @@ export function DataTable<TData, TValue>({
                                     ))}
 
                                     {admin && (
-                                    <TableCell>
-                                        {/* <Button variant="outline" size="sm" onClick={() => handleEditClick(row)}>
+                                        <TableCell>
+                                            {/* <Button variant="outline" size="sm" onClick={() => handleEditClick(row)}>
                                             <Edit className="h-4 w-4" />
                                         </Button> */}
-                                        {admin && <EditOfficeHoursForm row={row.original} />}
-                                    </TableCell>
+                                            {admin && <EditOfficeHoursForm row={row.original} />}
+                                        </TableCell>
                                     )}
                                 </TableRow>
                             ))

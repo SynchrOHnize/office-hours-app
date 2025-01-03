@@ -1,6 +1,6 @@
 // aiService.ts
 import { ChatOpenAI } from "@langchain/openai";
-import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ServiceResponse } from "@/common/schemas/serviceResponse";
 import { StatusCodes } from "http-status-codes";
@@ -16,7 +16,6 @@ export class AIService {
   async parseOfficeHours(courseId: number, rawData: string) {
     const template = `Parse the user's given office hours data into a list of objects with this schema:
   {{
-    "course_id": number,
     "host": string,
     "day": "monday" | "tuesday" | "wednesday" | "thursday" | "friday",
     "start_time": "HH:mm",
@@ -37,6 +36,11 @@ export class AIService {
       let response = await chain.invoke({ courseId, rawData });
       response = response.replace(/```json\n?|\n?```/g, '');
       const parsed = JSON.parse(response);
+
+      for (const officeHour of parsed) {
+        officeHour.course_id = courseId;
+      }
+
       return ServiceResponse.success("Successfully parsed office hours", parsed);
     } catch (ex) {
       logger.error(`Error parsing office hours: ${(ex as Error).message}`);
