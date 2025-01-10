@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS office_hours (
   end_time TIME NOT NULL,
   day ENUM('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday') NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT '1970-01-01 00:00:00',
   updated_by VARCHAR(255) DEFAULT NULL,
   is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
   FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
