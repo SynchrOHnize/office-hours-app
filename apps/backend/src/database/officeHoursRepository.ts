@@ -76,8 +76,9 @@ export class OfficeHourRepository {
         start_time, 
         end_time, 
         day,
+        updated_at,
         updated_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, "2024-01-01 00:00:00", ?)
     `;
 
     const [result] = await this.db.execute<ResultSetHeader>(query, [

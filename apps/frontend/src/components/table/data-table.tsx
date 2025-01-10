@@ -219,13 +219,21 @@ export function DataTable<TData, TValue>({
         )
     };
 
-    const isRecentlyEdited = (createdAt: string, updatedAt: string) => {
-        const createdDate = new Date(createdAt);
+    const isRecentlyEdited = (updatedAt: string) => {
+        const currentDate = new Date();
         const updatedDate = new Date(updatedAt);
-        const timeDiff = updatedDate.getTime() - createdDate.getTime(); // Difference in milliseconds
+        const timeDiff = updatedDate.getTime() - currentDate.getTime(); // Difference in milliseconds
         const daysDiff = timeDiff / (1000 * 3600 * 24); // Convert to days
     
-        return daysDiff < 7;
+        if (daysDiff < 0) {
+            return false;
+        }
+        else if (daysDiff < 7) {
+            return true;
+        }
+        else {
+            return false;
+        }
     };    
 
     console.log(table.getHeaderGroups()) // TODO: Testing, Remove
@@ -328,9 +336,9 @@ export function DataTable<TData, TValue>({
                                         ))}
 
                                         {/* Conditionally render symbol for recently edited records */}
-                                        {isRecentlyEdited(created_at, updated_at) && (
+                                        {isRecentlyEdited(updated_at) && (
                                             <TableCell>
-                                                <span role="img" aria-label="recently-edited">✏️</span> {/* Pencil icon */}
+                                                <span role="img" aria-label="recently-edited">✏️</span>
                                             </TableCell>
                                         )}
 
