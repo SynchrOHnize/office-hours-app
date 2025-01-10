@@ -219,6 +219,15 @@ export function DataTable<TData, TValue>({
         )
     };
 
+    const isRecentlyEdited = (createdAt: string, updatedAt: string) => {
+        const createdDate = new Date(createdAt);
+        const updatedDate = new Date(updatedAt);
+        const timeDiff = updatedDate.getTime() - createdDate.getTime(); // Difference in milliseconds
+        const daysDiff = timeDiff / (1000 * 3600 * 24); // Convert to days
+    
+        return daysDiff < 7;
+    };    
+
     console.log(table.getHeaderGroups()) // TODO: Testing, Remove
 
     return (
@@ -293,55 +302,64 @@ export function DataTable<TData, TValue>({
                     {/* Table body with data rows */}
                     <TableBody>
                         {table.getRowModel().rows?.length > 0 ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={row.getIsSelected() && "selected"}
-                                    className={
-                                        (row.original as OfficeHour).mode === 'Remote' ? 'bg-blue-50' :
-                                            (row.original as OfficeHour).mode === 'In-person' ? 'bg-green-100' :
-                                                (row.original as OfficeHour).mode === 'Hybrid' ? 'bg-yellow-50' :
-                                                    ''
-                                    }
-                                >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {/* Special handling for link columns */}
-                                            {cell.column.id === 'link' ? (
-                                                <TruncatedText text={cell.getValue() as string} />
-                                            ) : (
-                                                flexRender(cell.column.columnDef.cell, cell.getContext())
-                                            )}
-                                        </TableCell>
-                                    ))}
+                            table.getRowModel().rows.map((row) => {
+                                const officeHour = row.original as OfficeHour;
+                                const { created_at, updated_at } = officeHour;
 
-                                    {admin && (
-                                        <TableCell>
-                                            <EditOfficeHoursForm row={row.original} />
-                                        </TableCell>
-                                    )}
-                                </TableRow>
-                            ))
+                                return (
+                                    <TableRow
+                                        key={row.id}
+                                        data-state={row.getIsSelected() && "selected"}
+                                        className={
+                                            officeHour.mode === 'Remote' ? 'bg-blue-50' :
+                                            officeHour.mode === 'In-person' ? 'bg-green-100' :
+                                            officeHour.mode === 'Hybrid' ? 'bg-yellow-50' : ''
+                                        }
+                                    >
+                                        {row.getVisibleCells().map((cell) => (
+                                            <TableCell key={cell.id}>
+                                                {/* Special handling for link columns */}
+                                                {cell.column.id === 'link' ? (
+                                                    <TruncatedText text={cell.getValue() as string} />
+                                                ) : (
+                                                    flexRender(cell.column.columnDef.cell, cell.getContext())
+                                                )}
+                                            </TableCell>
+                                        ))}
+
+                                        {/* Conditionally render symbol for recently edited records */}
+                                        {isRecentlyEdited(created_at, updated_at) && (
+                                            <TableCell>
+                                                <span role="img" aria-label="recently-edited">✏️</span> {/* Pencil icon */}
+                                            </TableCell>
+                                        )}
+
+                                        {admin && (
+                                            <TableCell>
+                                                <EditOfficeHoursForm row={row.original} />
+                                            </TableCell>
+                                        )}
+                                    </TableRow>
+                                );
+                            })
                         ) : (
-                            // Empty state message
                             <TableRow>
                                 <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                                    {userCourses?.length > 0 ?
+                                    {userCourses?.length > 0 ? (
                                         <p>No courses found.</p>
-                                        :
+                                    ) : (
                                         <div className="flex-col flex items-center justify-center gap-2">
-                                            <>
-                                                <p>You have no courses yet.</p>
-                                                <div className="max-w-48">
-                                                    <AddCourseInput empty={true} />
-                                                </div>
-                                            </>
+                                            <p>You have no courses yet.</p>
+                                            <div className="max-w-48">
+                                                <AddCourseInput empty={true} />
+                                            </div>
                                         </div>
-                                    }
+                                    )}
                                 </TableCell>
                             </TableRow>
                         )}
                     </TableBody>
+
                 </Table >
             </div >
 
