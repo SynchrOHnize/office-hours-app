@@ -1,5 +1,5 @@
 import express, { type Router } from "express";
-import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
+import { clerkMiddleware, requireAuth } from "@clerk/express";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { UserController } from "./userController";
 import { db } from "@/database/init";
@@ -44,7 +44,9 @@ const userController = new UserController(
 
 export const userRouter: Router = express.Router();
 
-userRouter.use(ClerkExpressRequireAuth());
+// Clerk
+userRouter.use(requireAuth());
+
 userRouter.get("/", adminAuth(userService), userController.getAllUsers);
 userRouter.get("/me", userController.getUser);
 userRouter.post("/me", userController.storeUser);

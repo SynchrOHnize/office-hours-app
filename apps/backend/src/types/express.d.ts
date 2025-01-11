@@ -1,5 +1,5 @@
 // src/types/express.d.ts
-import { ClerkExpressAuthenticatedRequest } from "@clerk/clerk-sdk-node";
+import { ClerkExpressAuthenticatedRequest } from "@clerk/express";
 
 import { Request } from 'express';
 

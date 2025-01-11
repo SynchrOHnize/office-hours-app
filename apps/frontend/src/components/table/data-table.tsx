@@ -312,7 +312,7 @@ export function DataTable<TData, TValue>({
                         {table.getRowModel().rows?.length > 0 ? (
                             table.getRowModel().rows.map((row) => {
                                 const officeHour = row.original as OfficeHour;
-                                const { created_at, updated_at } = officeHour;
+                                const {updated_at } = officeHour;
 
                                 return (
                                     <TableRow

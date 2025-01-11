@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 
 import type { User } from "@/common/schemas/userSchema";
-import { clerkClient } from "@clerk/clerk-sdk-node";
+import { clerkClient } from "@clerk/express";
 import { UserRepository } from "@/database/userRepository";
 import { ServiceResponse } from "@/common/schemas/serviceResponse";
 import { logger } from "@/server";

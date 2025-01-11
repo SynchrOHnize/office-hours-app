@@ -1,5 +1,5 @@
 import type { User } from "@/common/schemas/userSchema";
-import type { User as ClerkUser } from "@clerk/clerk-sdk-node";
+import type { User as ClerkUser } from "@clerk/express";
 import { FieldPacket, Pool } from "mysql2/promise";
 
 export class UserRepository {

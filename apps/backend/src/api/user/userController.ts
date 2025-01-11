@@ -1,5 +1,5 @@
 import type { Request, RequestHandler, Response } from "express";
-import { clerkClient } from "@clerk/clerk-sdk-node";
+import { clerkClient } from "@clerk/express";
 
 import { UserService } from "@/api/user/userService";
 import { UserCourseService } from "./userCourseService";
