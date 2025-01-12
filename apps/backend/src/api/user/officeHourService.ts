@@ -92,9 +92,15 @@ export class OfficeHourService {
         return ServiceResponse.failure("No office hours found", null, StatusCodes.NOT_FOUND);
       }
   
+      // create ical file
       const ical_file = ical({ name: calendarName });
-      const semesterEnd = new Date(Date.now() + 3 * 3600 * 1000 * 24 * 7 * 4); // 12 weeks from now
+
+      // define semesterEnd (office hour events will repeat for however many weeks)
+      const semesterEnd = new Date(Date.now() + 3 * 3600 * 1000 * 24 * 7 * 5); // 15 weeks from now
   
+      // set the timezone
+      ical_file.timezone('America/New_York');
+
       for (const oh of officeHours) {
         // Base event properties that are common to all modes
         const eventConfig: ICalEventData = {
