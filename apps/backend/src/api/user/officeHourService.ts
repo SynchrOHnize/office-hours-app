@@ -106,6 +106,7 @@ export class OfficeHourService {
         const eventConfig: ICalEventData = {
           start: this.transformTime(oh.day, oh.start_time),
           end: this.transformTime(oh.day, oh.end_time),
+          timezone: 'America/New_York',
           summary: `${oh.host}'s Office Hours`,
           organizer: {
             name: oh.host,
