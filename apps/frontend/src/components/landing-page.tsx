@@ -23,7 +23,7 @@ const LandingPage = () => {
           <div className="flex items-center justify-center p-4 md:p-8">
             <div className="text-center">
               <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4">
-                VIEW YOUR<br />OFFICE HOURS
+                SYNC YOUR<br />OFFICE HOURS
               </h2>
               <h3 className="text-xl md:text-2xl mb-4 font-semibold">
                 one dashboard. made simple.
