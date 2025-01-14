@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^7.0.0",
-    "@clerk/clerk-sdk-node": "^5.0.65",
+    "@clerk/express": "^1.3.33",
     "@langchain/community": "^0.3.17",
     "@langchain/core": "^0.3.20",
     "@langchain/openai": "^0.3.14",
