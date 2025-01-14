@@ -19,7 +19,7 @@ const Footer = () => {
             <a href="/terms" className="hover:text-gray-900 transition-colors">
               Terms of Service
             </a> */}
-        © {new Date().getFullYear()} SynchrOHnize. All rights reserved.
+        © {new Date().getFullYear()} OHsync. All rights reserved.
       </div>
     </footer>
   );
