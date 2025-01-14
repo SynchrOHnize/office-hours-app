@@ -36,6 +36,6 @@ RUN bun install
 COPY --from=builder /app/apps/frontend/dist ./apps/frontend/dist
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 
-EXPOSE 4173 8080
+EXPOSE 5173 8080
 
 CMD ["bun", "run", "start"]

@@ -6,7 +6,7 @@ services:
       - ./apps/frontend/.env.production
     ports:
       - "8080:8080"
-      - "4173:4173"
+      - "5173:5173"
     environment:
       - NODE_ENV=production
     networks:
