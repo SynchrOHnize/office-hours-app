@@ -22,7 +22,7 @@ const NavBar = () => {
             ? 'text-green-600'
             : 'text-red-600'
           }`}>
-          {user?.role.toUpperCase()}
+          {user?.role.toUpperCase() || 'UNKNOWN'}
         </p>
         <AccountButton />
       </div>
