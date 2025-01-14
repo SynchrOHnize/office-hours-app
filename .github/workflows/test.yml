@@ -32,7 +32,7 @@ jobs:
           echo "NODE_ENV=production"
           echo "PORT=8080"
           echo "HOST=localhost"
-          echo "CORS_ORIGIN=http://localhost:*"
+          echo "CORS_ORIGIN=http://localhost:4173"
           echo "COMMON_RATE_LIMIT_WINDOW_MS=240"
           echo "COMMON_RATE_LIMIT_MAX_REQUESTS=60"
           echo "MYSQL_USER=${{ secrets.MYSQL_USER }}"
