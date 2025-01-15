@@ -14,14 +14,14 @@ import {
 } from "@/components/ui/form"
 
 import { Course, PreviewOfficeHour } from "@/services/userService";
-import { parseOfficeHours } from "@/services/userService";
+import { parseOfficeHoursJson, parseOfficeHoursText } from "@/services/userService";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "../ui/textarea";
 import { PreviewTable } from "./preview-table";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
 import OpenAILogo from "@/assets/openai-logo.png";
 import { CourseFormField } from "./course-form-field";
-
+import { convertHtmlToMarkdown } from 'dom-to-semantic-markdown';
 const textSchema = z.object({
     raw_text: z.string().min(1, {
         message: "Inputted text cannot be empty",
@@ -32,15 +32,67 @@ export function InsertWithAI() {
     const [course, setCourse] = useState<Course | null>(null);
     const [parsedResults, setParsedResults] = useState<PreviewOfficeHour[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [parsingMarkdown, setParsingMarkdown] = useState(false);
     const [showTip, setShowTip] = useState(false);
     const { toast } = useToast();
-
     const form = useForm<z.infer<typeof textSchema>>({
         resolver: zodResolver(textSchema),
         defaultValues: {
             raw_text: "",
         },
     })
+
+    // Handle the file input change event
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            console.log("File selected");
+            setParsingMarkdown(true); // Start parsing
+            const reader = new FileReader();
+    
+            reader.onload = async (e) => {
+                try {
+                    // Read the file content as text
+                    const htmlContent = e.target?.result;
+                    if (!htmlContent || typeof htmlContent !== 'string') {
+                        toast({
+                            title: "Error!",
+                            description: "Failed to read file",
+                            variant: "destructive",
+                        });
+                        setParsingMarkdown(false); // Stop parsing
+                        event.target.value = ""; // Reset file input
+                        return;
+                    }
+    
+                    // Convert HTML to Markdown
+                    let convertedMarkdown = convertHtmlToMarkdown(htmlContent);
+                    const response = await parseOfficeHoursText(convertedMarkdown);
+                    if (response?.statusCode !== 200) {
+                        toast({
+                            title: "Error!",
+                            description: "Failed to parse office hours into text with AI.",
+                            variant: "destructive",
+                        });
+                    } else {
+                        convertedMarkdown = response.data;
+                    }
+                    form.setValue("raw_text", form.getValues("raw_text") + "\n" + convertedMarkdown);
+                } catch (err) {
+                    toast({
+                        title: "Error!",
+                        description: "Failed to convert HTML to Markdown",
+                        variant: "destructive",
+                    });
+                } finally {
+                    setParsingMarkdown(false); // Ensure parsing stops
+                    event.target.value = ""; // Reset file input
+                }
+            };
+    
+            reader.readAsText(file); // Read the file content
+        }
+    };
 
     const onSubmit = async (data: z.infer<typeof textSchema>) => {
         if (!course) {
@@ -53,7 +105,7 @@ export function InsertWithAI() {
         }
 
         setIsLoading(true);
-        let response = await parseOfficeHours(course.course_id, data.raw_text);
+        let response = await parseOfficeHoursJson(course.course_id, data.raw_text);
         setIsLoading(false);
         if (response?.status !== 200) {
             if (response?.status === 429) {
@@ -78,7 +130,7 @@ export function InsertWithAI() {
         const officeHours = payload.data as PreviewOfficeHour[];
 
         setParsedResults(officeHours);
-        
+
         if (officeHours.length === 0) {
             toast({
                 title: "No Data Found",
@@ -106,6 +158,33 @@ export function InsertWithAI() {
 
 
                     {/* Rest of the form fields remain unchanged */}
+                    <FormItem>
+                        <FormLabel>Parse HTML (Recommended)</FormLabel>
+                        <FormControl>
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="file"
+                                    accept=".html"
+                                    onChange={handleFileChange}
+                                    className="hidden"
+                                    id="file-upload"
+                                />
+                                <label
+                                    htmlFor="file-upload"
+                                    className="min-w-24 flex items-center gap-2 cursor-pointer px-4 py-2 text-sm font-medium text-black bg-white border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+                                >
+                                    <Upload className="w-4 h-4" />
+                                    <span>{parsingMarkdown ? "Parsing File..." : "Upload File"}</span>
+                                </label>
+                            </div>
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    <div className="flex items-center justify-center">
+                        <hr className="w-1/2 border-t border-gray-300" />
+                        <span className="mx-4 text-gray-500">Or</span>
+                        <hr className="w-1/2 border-t border-gray-300" />
+                    </div>
                     <FormField
                         control={form.control}
                         name="raw_text"
@@ -136,7 +215,7 @@ export function InsertWithAI() {
                     </span>
                 </form>
             </Form>
-            {parsedResults.length > 0 && <PreviewTable data={parsedResults} />}
+            {parsedResults.length > 0 && <PreviewTable data={parsedResults} setData={setParsedResults} />}
         </>
     )
 }

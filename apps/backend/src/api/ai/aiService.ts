@@ -8,9 +8,10 @@ import { logger } from "@/server";
 
 export class AIService {
   private llm: ChatOpenAI;
-
+  private cheapLlm: ChatOpenAI;
   constructor() {
     this.llm = new ChatOpenAI({ modelName: "gpt-4o" });
+    this.cheapLlm = new ChatOpenAI({ modelName: "gpt-4o-mini" });
   }
 
   formatData(officeHour: Record<string, any>) {
@@ -78,7 +79,7 @@ export class AIService {
     return officeHour;
   }
 
-  async parseOfficeHours(courseId: number, rawData: string) {
+  async parseOfficeHoursJson(courseId: number, rawData: string): Promise<ServiceResponse<Record<string, any>[] | null>> {
     const template = `Parse the given data into a list of objects with this schema:
   {{
     "host": string,
@@ -111,6 +112,33 @@ export class AIService {
       }
 
       return ServiceResponse.success("Successfully parsed office hours", parsed);
+    } catch (ex) {
+      logger.error(`Error parsing office hours: ${(ex as Error).message}`);
+      return ServiceResponse.failure("Failed to parse office hours", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async parseOfficeHoursText(rawData: string): Promise<ServiceResponse<string | null>> {
+    const template = `Parse the given data into formatted markdown of office hours, looking for this data:
+    "host": string (full legal name of the host),
+    "day": "sunday" | "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" (allow any casing),
+    "start_time": "HH:mm PM/AM" (convert time to this format),
+    "end_time": "HH:mm PM/AM" (convert time to this format),
+    "mode": "in-person" | "remote" | "hybrid" (allow any casing or deduce),
+    "location": string,
+    "link": string,
+    
+    Make sure to format the markdown in an extremely readable format.`;
+
+    try {
+      const prompt = ChatPromptTemplate.fromMessages([
+        ["system", template],
+        ["user", "Raw Data: {rawData}"],
+      ]);
+      const outputParser = new StringOutputParser();
+      const chain = prompt.pipe(this.cheapLlm).pipe(outputParser);
+      let response = await chain.invoke({ rawData });
+      return ServiceResponse.success("Successfully parsed office hours", response);
     } catch (ex) {
       logger.error(`Error parsing office hours: ${(ex as Error).message}`);
       return ServiceResponse.failure("Failed to parse office hours", null, StatusCodes.INTERNAL_SERVER_ERROR);

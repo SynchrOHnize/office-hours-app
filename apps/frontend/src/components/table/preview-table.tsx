@@ -14,13 +14,15 @@ import { useQueryClient } from "@tanstack/react-query";
 import { EditPreview } from "./edit-preview";
 import { format, parse } from "date-fns";
 import { useEffect, useState } from "react";
+import { Loader2, Trash2 } from "lucide-react";
 
 
 
-export const PreviewTable = ({ data }: { data: PreviewOfficeHour[] }) => {
+export const PreviewTable = ({ data, setData }: { data: PreviewOfficeHour[], setData: (data: PreviewOfficeHour[]) => void }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [invalid, setInvalid] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     for (const item of data) {
@@ -34,6 +36,7 @@ export const PreviewTable = ({ data }: { data: PreviewOfficeHour[] }) => {
 
 
   const onSubmit = async () => {
+    setLoading(true);
     for (const item of data) {
       if ([item.host, item.day, item.start_time, item.end_time, item.mode, item.location, item.link].includes("INVALID")) {
         toast({
@@ -41,6 +44,7 @@ export const PreviewTable = ({ data }: { data: PreviewOfficeHour[] }) => {
           title: "Error",
           description: "Please correct the invalid fields.",
         });
+        setLoading(false);
         return null; // Return null to indicate an invalid entry
       }
     }
@@ -69,6 +73,7 @@ export const PreviewTable = ({ data }: { data: PreviewOfficeHour[] }) => {
         description: "Failed to save office hours.",
       })
     }
+    setLoading(false);
   };
 
 
@@ -103,12 +108,22 @@ export const PreviewTable = ({ data }: { data: PreviewOfficeHour[] }) => {
               <TableCell>
                 <EditPreview row={item} />
               </TableCell>
+              <TableCell>
+                <Button variant="ghost" onClick={() => {
+                  const newData = data.filter((_, idx) => idx !== index);
+                  setData(newData);
+                  console.log(newData);
+                }}>
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
       <Button onClick={onSubmit} className={invalid ? "bg-red-500" : "bg-blue-500"} disabled={invalid}>
-        {invalid ? "Fix Invalid Fields" : "Store Office Hours"}
+        {!loading && (invalid ? "Fix Invalid Fields" : "Store Office Hours")}
+        {loading && <Loader2 className="animate-spin" size={64} />}
       </Button>
     </>
   );

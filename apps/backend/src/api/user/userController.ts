@@ -174,6 +174,16 @@ export class UserController {
       req.body,
       userId
     );
+
+    if (serviceResponse.data) {
+      console.log("Saving course for user after storing office hour")
+      const storeResponse = await this.userCourseService.storeUserCourse(userId, serviceResponse.data.course_id);
+      if (!storeResponse.success) {
+        console.log("Error saving course for user after storing office hour")
+        return handleServiceResponse(storeResponse, res);
+      }
+    }
+
     return handleServiceResponse(serviceResponse, res);
   };
 

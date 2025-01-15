@@ -9,4 +9,5 @@ aiRouter.use(specialRateLimiter);
 const aiService = new AIService();
 const aiController = new AIController(aiService);
 
-aiRouter.post("/office-hours", aiController.parseOfficeHours);
+aiRouter.post("/json/office-hours", aiController.parseOfficeHoursJson);
+aiRouter.post("/text/office-hours", aiController.parseOfficeHoursText);

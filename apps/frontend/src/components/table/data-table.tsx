@@ -45,9 +45,11 @@ import { EditOfficeHoursForm } from "./edit-office-hours"
 import { deleteOfficeHours, fetchOfficeHours, fetchUserCourses, getIcalFile, getIcalFileByIds, OfficeHour } from "@/services/userService"
 import { useQuery } from "@tanstack/react-query"
 import { AddCourseInput } from "./add-user-course"
-import { Filter, Trash } from "lucide-react"
+import { AlertCircle, Filter, Trash } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
+import { Tooltip, TooltipProvider } from "@radix-ui/react-tooltip"
+import { TooltipContent, TooltipTrigger } from "../ui/tooltip"
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -224,7 +226,7 @@ export function DataTable<TData, TValue>({
         const updatedDate = new Date(updatedAt);
         const timeDiff = updatedDate.getTime() - currentDate.getTime(); // Difference in milliseconds
         const daysDiff = timeDiff / (1000 * 3600 * 24); // Convert to days
-    
+
         if (daysDiff < 0) {
             return false;
         }
@@ -234,7 +236,7 @@ export function DataTable<TData, TValue>({
         else {
             return false;
         }
-    };    
+    };
 
     console.log(table.getHeaderGroups()) // TODO: Testing, Remove
 
@@ -312,49 +314,64 @@ export function DataTable<TData, TValue>({
                         {table.getRowModel().rows?.length > 0 ? (
                             table.getRowModel().rows.map((row) => {
                                 const officeHour = row.original as OfficeHour;
-                                const {updated_at } = officeHour;
+                                const { updated_at } = officeHour;
 
                                 return (
-                                    <TableRow
-                                        key={row.id}
-                                        data-state={row.getIsSelected() && "selected"}
-                                        className={
-                                            officeHour.mode === 'Remote' ? 'bg-blue-50' :
-                                            officeHour.mode === 'In-person' ? 'bg-green-100' :
-                                            officeHour.mode === 'Hybrid' ? 'bg-yellow-50' : ''
-                                        }
-                                    >
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
-                                                {/* Special handling for link columns */}
-                                                {cell.column.id === 'link' ? (
-                                                    <TruncatedText text={cell.getValue() as string} />
-                                                ) : (
-                                                    flexRender(cell.column.columnDef.cell, cell.getContext())
-                                                )}
-                                            </TableCell>
-                                        ))}
-
-                                        {/* Conditionally render symbol for recently edited records */}
+                                    <>
                                         {isRecentlyEdited(updated_at) && (
-                                            <TableCell>
-                                                <span role="img" aria-label="recently-edited">✏️</span>
-                                            </TableCell>
+                                            <div className="absolute bottom-0 mb-1 ml-1">
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <AlertCircle
+                                                                size={16} // Adjust size as needed
+                                                                color="black" // Customize color if needed
+                                                                aria-label="recently-edited"
+                                                            />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>This row of office hours was recently modified.</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            </div>
                                         )}
+                                        <TableRow
+                                            key={row.id}
+                                            data-state={row.getIsSelected() && "selected"}
+                                            className={
+                                                officeHour.mode === 'Remote' ? 'bg-blue-50' :
+                                                    officeHour.mode === 'In-person' ? 'bg-green-100' :
+                                                        officeHour.mode === 'Hybrid' ? 'bg-yellow-50' : ''
+                                            }
+                                        >
+                                            {/* Conditionally render symbol for recently edited records */}
+                                            {row.getVisibleCells().map((cell) => (
+                                                <TableCell key={cell.id}>
+                                                    {/* Special handling for link columns */}
+                                                    {cell.column.id === 'link' ? (
+                                                        <TruncatedText text={cell.getValue() as string} />
+                                                    ) : (
+                                                        flexRender(cell.column.columnDef.cell, cell.getContext())
+                                                    )}
+                                                </TableCell>
+                                            ))}
 
-                                        {admin && (
-                                            <TableCell>
-                                                <EditOfficeHoursForm row={row.original} />
-                                            </TableCell>
-                                        )}
-                                    </TableRow>
+                                            {admin && (
+                                                <TableCell>
+                                                    <EditOfficeHoursForm row={row.original} />
+                                                </TableCell>
+                                            )}
+                                        </TableRow>
+                                    </>
+
                                 );
                             })
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
                                     {userCourses?.length > 0 ? (
-                                        <p>No courses found.</p>
+                                        <p>No office hours found for selected courses.</p>
                                     ) : (
                                         <div className="flex-col flex items-center justify-center gap-2">
                                             <p>You have no courses yet.</p>

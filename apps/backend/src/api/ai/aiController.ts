@@ -10,9 +10,15 @@ export class AIController {
     this.aiService = aiService;
   }
  
-  public parseOfficeHours = async (req: Request, res: Response) => {
+  public parseOfficeHoursJson = async (req: Request, res: Response) => {
     const { course_id, raw_data } = req.body;
-    const serviceResponse = await this.aiService.parseOfficeHours(course_id, raw_data);
+    const serviceResponse = await this.aiService.parseOfficeHoursJson(course_id, raw_data);
+    return handleServiceResponse(serviceResponse, res);
+  };
+
+  public parseOfficeHoursText = async (req: Request, res: Response) => {
+    const { raw_data } = req.body;
+    const serviceResponse = await this.aiService.parseOfficeHoursText(raw_data);
     return handleServiceResponse(serviceResponse, res);
   };
  }

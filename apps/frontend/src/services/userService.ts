@@ -223,12 +223,12 @@ export const storeOfficeHourList = async (officeHours: Record<string, any>[]): P
   }
 }
 
-export const parseOfficeHours = async (
+export const parseOfficeHoursJson = async (
   course_id: number,
   raw_data: string
 ): Promise<AxiosResponse | null> => {
   try {
-    const response = await api.post(`/ai/office-hours`, { raw_data, course_id });
+    const response = await api.post(`/ai/json/office-hours`, { raw_data, course_id });
     return response; // Return the full AxiosResponse object
   } catch (error: any) {
     if (error.response) {
@@ -239,6 +239,18 @@ export const parseOfficeHours = async (
       console.error("Unexpected error while parsing office hours:", error);
       return null;
     }
+  }
+};
+
+export const parseOfficeHoursText = async (
+  raw_data: string
+): Promise<Payload | null> => {
+  try {
+    const response = await api.post(`/ai/text/office-hours`, { raw_data });
+    const payload = response.data;
+    return payload;
+  } catch (error: any) {
+    return null;
   }
 };
 
