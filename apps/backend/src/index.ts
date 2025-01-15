@@ -1,7 +1,7 @@
 import { env } from "@/common/utils/envConfig";
 import { app, logger } from "@/server";
 
-const server = app.listen(8081, () => {
+const server = app.listen(8080, () => {
   const { NODE_ENV } = env;
   logger.info(`Server (${NODE_ENV}) running on port http://localhost:8080`);
 });
