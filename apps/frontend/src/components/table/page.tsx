@@ -5,7 +5,7 @@ import { AlertCircle, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 export default function Table() {
-  const { data: user } = useQuery({
+  const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['user'],
     queryFn: fetchUser
   });
@@ -18,7 +18,7 @@ export default function Table() {
     enabled: !!user
   });
 
-  if (isLoading) {
+  if (isLoading || userLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <Loader2 className="animate-spin" size={64} />

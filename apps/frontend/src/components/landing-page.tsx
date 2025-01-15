@@ -30,7 +30,7 @@ const LandingPage = () => {
               </h3>
               <LoginButton />
               <p className="mt-4 text-md text-gray-600 italic">
-                <b>Note:</b> please log in with your @ufl.edu email.
+                <b>NOTE:</b> only @ufl.edu emails permitted.
               </p>
             </div>
           </div>
