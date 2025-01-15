@@ -5,9 +5,9 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-export const TruncatedText = ({ text }: { text: string }) => {
+export const TruncatedText = ({ text, maxLength = 20 }: { text: string, maxLength?: number }) => {
     if (!text) return null;
-    const truncatedText = text.length > 30 ? text.substring(0, 30) + '...' : text;
+    const truncatedText = text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
 
     return (
         <TooltipProvider>

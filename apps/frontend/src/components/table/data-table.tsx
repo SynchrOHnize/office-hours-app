@@ -1,6 +1,5 @@
-import * as React from "react"
 import { DataTablePagination } from "@/components/ui/data-table-pagination"
-import { DataTableViewOptions } from "@/components/ui/data-table-view-options"
+// import { DataTableViewOptions } from "@/components/ui/data-table-view-options"
 import { Button } from "@/components/ui/button"
 
 import { TruncatedText } from "@/components/ui/truncated-text"
@@ -45,11 +44,10 @@ import { EditOfficeHoursForm } from "./edit-office-hours"
 import { deleteOfficeHours, fetchOfficeHours, fetchUserCourses, getIcalFile, getIcalFileByIds, OfficeHour } from "@/services/userService"
 import { useQuery } from "@tanstack/react-query"
 import { AddCourseInput } from "./add-user-course"
-import { AlertCircle, Filter, Trash } from "lucide-react"
+import { AlertCircle, Filter, Trash, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
-import { Tooltip, TooltipProvider } from "@radix-ui/react-tooltip"
-import { TooltipContent, TooltipTrigger } from "../ui/tooltip"
+import { useState } from "react";
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -62,10 +60,11 @@ export function DataTable<TData, TValue>({
     data,
     admin,
 }: DataTableProps<TData, TValue>) {
-    const [sorting, setSorting] = React.useState<SortingState>([])
-    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-    const [rowSelection, setRowSelection] = React.useState({})
+    const [sorting, setSorting] = useState<SortingState>([])
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+    const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+    const [rowSelection, setRowSelection] = useState({})
+    const [closedTip, setClosedTip] = useState(false)
     const { toast } = useToast()
 
     const { refetch } = useQuery({
@@ -242,10 +241,23 @@ export function DataTable<TData, TValue>({
 
     return (
         <div className={cn(table.getRowModel().rows?.length === 0 && "max-w-screen-lg")}>
+            {!closedTip && <div className="w-full mb-5 bg-blue-100 border border-blue-200 text-blue-900 px-4 py-3 rounded-lg flex items-center relative">
+                <AlertCircle className="w-6 h-6 mr-3 text-blue-600" />
+                <span>
+                    <strong>Tip:</strong> Rows with darker background indicate that the office hours have recently changed.
+                </span>
+                <button
+                    className="absolute right-0 mr-4 text-blue-600 hover:text-blue-800"
+                    onClick={() => setClosedTip(true)}
+                    aria-label="Close Tip"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+            </div>}
             {/* Top section: Search, filters and action buttons */}
             <div className="flex items-end py-4 gap-4">
                 <div className="flex gap-2">
-                    <DataTableViewOptions table={table} />
+                    {/* <DataTableViewOptions table={table} /> */}
                     <div className="relative">
                         <Input
                             placeholder="Filter course code..."
@@ -317,53 +329,37 @@ export function DataTable<TData, TValue>({
                                 const { updated_at } = officeHour;
 
                                 return (
-                                    <>
-                                        {isRecentlyEdited(updated_at) && (
-                                            <div className="absolute bottom-0 mb-1 ml-1">
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <AlertCircle
-                                                                size={16} // Adjust size as needed
-                                                                color="black" // Customize color if needed
-                                                                aria-label="recently-edited"
-                                                            />
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p>This row of office hours was recently modified.</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                            </div>
-                                        )}
-                                        <TableRow
-                                            key={row.id}
-                                            data-state={row.getIsSelected() && "selected"}
-                                            className={
-                                                officeHour.mode === 'Remote' ? 'bg-blue-50' :
-                                                    officeHour.mode === 'In-person' ? 'bg-green-100' :
-                                                        officeHour.mode === 'Hybrid' ? 'bg-yellow-50' : ''
-                                            }
-                                        >
-                                            {/* Conditionally render symbol for recently edited records */}
-                                            {row.getVisibleCells().map((cell) => (
-                                                <TableCell key={cell.id}>
-                                                    {/* Special handling for link columns */}
-                                                    {cell.column.id === 'link' ? (
-                                                        <TruncatedText text={cell.getValue() as string} />
-                                                    ) : (
-                                                        flexRender(cell.column.columnDef.cell, cell.getContext())
-                                                    )}
-                                                </TableCell>
-                                            ))}
+                                    <TableRow
+                                        key={row.id}
+                                        data-state={row.getIsSelected() && "selected"}
+                                        className={cn({
+                                            'bg-blue-50': officeHour.mode === 'Remote' && !isRecentlyEdited(updated_at),
+                                            'bg-blue-100': officeHour.mode === 'Remote' && isRecentlyEdited(updated_at),
+                                            'bg-green-100': officeHour.mode === 'In-person' && !isRecentlyEdited(updated_at),
+                                            'bg-green-200': officeHour.mode === 'In-person' && isRecentlyEdited(updated_at),
+                                            'bg-yellow-50': officeHour.mode === 'Hybrid' && !isRecentlyEdited(updated_at),
+                                            'bg-yellow-100': officeHour.mode === 'Hybrid' && isRecentlyEdited(updated_at),
+                                        })}
 
-                                            {admin && (
-                                                <TableCell>
-                                                    <EditOfficeHoursForm row={row.original} />
-                                                </TableCell>
-                                            )}
-                                        </TableRow>
-                                    </>
+                                    >
+                                        {/* Conditionally render symbol for recently edited records */}
+                                        {row.getVisibleCells().map((cell) => (
+                                            <TableCell key={cell.id}>
+                                                {/* Special handling for link columns */}
+                                                {cell.column.id === 'link' ? (
+                                                    <TruncatedText text={cell.getValue() as string} />
+                                                ) : (
+                                                    flexRender(cell.column.columnDef.cell, cell.getContext())
+                                                )}
+                                            </TableCell>
+                                        ))}
+
+                                        {admin && (
+                                            <TableCell>
+                                                <EditOfficeHoursForm row={row.original} />
+                                            </TableCell>
+                                        )}
+                                    </TableRow>
 
                                 );
                             })
@@ -397,6 +393,6 @@ export function DataTable<TData, TValue>({
 
                 </div>
             </div >
-        </div>
+        </div >
     )
 }

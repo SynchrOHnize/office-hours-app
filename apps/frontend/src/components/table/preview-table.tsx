@@ -15,6 +15,7 @@ import { EditPreview } from "./edit-preview";
 import { format, parse } from "date-fns";
 import { useEffect, useState } from "react";
 import { Loader2, Trash2 } from "lucide-react";
+import { capitalize } from "@/lib/utils";
 
 
 
@@ -95,14 +96,14 @@ export const PreviewTable = ({ data, setData }: { data: PreviewOfficeHour[], set
           {data.map((item, index) => (
             <TableRow key={index}>
               <TableCell>{item.host}</TableCell>
-              <TableCell>{item.day.charAt(0).toUpperCase() + item.day.slice(1)}</TableCell>
+              <TableCell>{capitalize(item.day).slice(0, 3)}.</TableCell>
               <TableCell>
                 {item.start_time}
               </TableCell>
               <TableCell>
                 {item.end_time}
               </TableCell>
-              <TableCell>{item.mode.charAt(0).toUpperCase() + item.mode.slice(1)}</TableCell>
+              <TableCell>{capitalize(item.mode)}</TableCell>
               <TableCell>{item.location}</TableCell>
               <TableCell><TruncatedText text={item.link} /></TableCell>
               <TableCell>

@@ -1,5 +1,6 @@
 import { AxiosResponse } from "axios";
 import api from "./api";
+import { capitalize } from "@/lib/utils";
 
 export interface User {
   id: string;
@@ -140,8 +141,8 @@ export const fetchOfficeHours = async (): Promise<OfficeHour[]> => {
     const officeHours = payload.data as OfficeHour[];
     return officeHours.map(item => ({
       ...item,
-      day: item.day.charAt(0).toUpperCase() + item.day.slice(1),
-      mode: item.mode.charAt(0).toUpperCase() + item.mode.slice(1),
+      day: capitalize(item.day),
+      mode: capitalize(item.mode),
       start_time: new Date(`2000-01-01T${item.start_time}`).toLocaleTimeString('en-US', {
         hour: 'numeric',
         minute: '2-digit',

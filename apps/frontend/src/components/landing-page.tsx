@@ -16,7 +16,7 @@ const LandingPage = () => {
 
   return (
     <div className="bg-slate-100">
-      <NavBar />
+      <NavBar isPublic={true} />
       <div className="min-h-screen text-black">
         <div className="grid md:grid-cols-2 grid-cols-1 min-h-screen">
           {/* Text Section */}

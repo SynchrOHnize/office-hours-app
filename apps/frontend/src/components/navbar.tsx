@@ -3,7 +3,7 @@ import project_logo from '../assets/project-logo.png';
 import AccountButton from './account-button.tsx';
 import { useQuery } from '@tanstack/react-query';
 
-const NavBar = () => {
+const NavBar = ({ isPublic = false }: { isPublic?: boolean }) => {
 
   const { data: user } = useQuery({
     queryKey: ['user'],
@@ -17,7 +17,7 @@ const NavBar = () => {
         <h1 className="font-extrabold text-3xl">OHsync</h1>
       </a>
 
-      <div className="flex gap-4 text-center justify-center items-center">
+      {!isPublic && <div className="flex gap-4 text-center justify-center items-center">
         <p className={`text-xl font-semibold ${user?.role.toLowerCase() === 'student'
             ? 'text-green-600'
             : 'text-red-600'
@@ -25,7 +25,7 @@ const NavBar = () => {
           {user?.role.toUpperCase() || 'UNKNOWN'}
         </p>
         <AccountButton />
-      </div>
+      </div>}
     </div>
   );
 };

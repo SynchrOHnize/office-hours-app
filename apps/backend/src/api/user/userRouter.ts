@@ -19,6 +19,7 @@ import {
 import { StoreCourseSchema } from "@/common/schemas/courseSchema";
 import { SearchService } from "../search/searchService";
 import { adminAuth } from "@/common/middleware/adminAuth";
+import { uflAuth } from "@/common/middleware/uflAuth";
 
 const userRepository = new UserRepository(db);
 const userService = new UserService(userRepository);
@@ -46,8 +47,9 @@ export const userRouter: Router = express.Router();
 
 // Clerk
 userRouter.use(requireAuth());
+userRouter.use(uflAuth(userService));
 
-userRouter.get("/", adminAuth(userService), userController.getAllUsers);
+userRouter.get("/all", adminAuth(userService), userController.getAllUsers);
 userRouter.get("/me", userController.getUser);
 userRouter.post("/me", userController.storeUser);
 
