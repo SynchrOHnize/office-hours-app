@@ -1,6 +1,6 @@
 services:
   app:
-    image: ghcr.io/OHsync/main-service:latest
+    image: ghcr.io/ohsync/main-service:latest
     env_file:
       - ./apps/backend/.env.production
       - ./apps/frontend/.env.production

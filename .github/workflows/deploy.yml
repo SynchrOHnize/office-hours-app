@@ -51,7 +51,7 @@ jobs:
         context: .
         push: true
         tags: |
-          ghcr.io/OHsync/main-service:latest
+          ghcr.io/ohsync/main-service:latest
 
     - name: Install SSH key
       uses: webfactory/ssh-agent@v0.8.0
