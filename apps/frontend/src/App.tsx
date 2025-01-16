@@ -1,9 +1,11 @@
 import LandingPage from './components/landing-page.tsx';
-import Dashboard from './components/dashboard.tsx';
+import { Dashboard } from './pages/dashboard.tsx';
 
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from './components/ui/toaster.tsx';
 import { SignedIn, SignedOut } from '@clerk/clerk-react';
+import NavBar from './components/navbar.tsx';
+import Footer from './components/footer.tsx';
 
 const App = () => {
   return (
@@ -26,7 +28,9 @@ const App = () => {
             element={
               <>
                 <SignedIn>
+                  <NavBar />
                   <Dashboard />
+                  <Footer />
                 </SignedIn>
                 <SignedOut>
                   <Navigate to="/" />

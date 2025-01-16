@@ -115,7 +115,6 @@ export function DataTable<TData, TValue>({
         const indices = Object.keys(rowSelection) // "['0', '1', '2']"
         const rows = data.filter((_, index) => indices.includes(index.toString())) as OfficeHour[]
         const ids = rows.map((row) => row.id)
-        console.log(ids)
 
         try {
             const payload = await getIcalFileByIds(ids);
@@ -172,7 +171,6 @@ export function DataTable<TData, TValue>({
         const indices = Object.keys(rowSelection) // "['0', '1', '2']"
         const rows = data.filter((_, index) => indices.includes(index.toString())) as OfficeHour[]
         const ids = rows.map((row) => row.id)
-        console.log(ids)
         await deleteOfficeHours(ids)
         await refetch()
         setRowSelection({})
@@ -237,14 +235,12 @@ export function DataTable<TData, TValue>({
         }
     };
 
-    console.log(table.getHeaderGroups()) // TODO: Testing, Remove
-
     return (
         <div className={cn(table.getRowModel().rows?.length === 0 && "max-w-screen-lg")}>
             {!closedTip && <div className="w-full mb-5 bg-blue-100 border border-blue-200 text-blue-900 px-4 py-3 rounded-lg flex items-center relative">
                 <AlertCircle className="w-6 h-6 mr-3 text-blue-600" />
                 <span>
-                    <strong>Tip:</strong> Rows with darker background indicate that the office hours have recently changed.
+                    <strong>Tip:</strong> Darker backgrounds indicate that the office hours have recently changed.
                 </span>
                 <button
                     className="absolute right-0 mr-4 text-blue-600 hover:text-blue-800"

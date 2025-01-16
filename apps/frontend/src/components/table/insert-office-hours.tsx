@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils";
 import { InsertWithForm } from "./insert-with-form";
-import { InsertWithAI } from "./insert-with-ai";
+import { InsertWithLLM } from "./insert-with-llm";
 
 export function InsertOfficeHoursForm() {
     const [isForm, setIsForm] = useState(true); // True = form style, False = text style
@@ -36,14 +36,14 @@ export function InsertOfficeHoursForm() {
                             Standard Form
                         </Button>
                         <Button variant={"ghost"} onClick={() => setIsForm(false)} className={cn(!isForm ? "font-bold" : "", "text-md")}>
-                            Parse with AI
+                            Parse with LLM
                             <Star className="h-4 w-4" />
                         </Button>
                         <span></span>
                         <span className="text-xs">(Recommended)</span>
                     </div>
                     {isForm && <InsertWithForm />}
-                    {!isForm && <InsertWithAI />}
+                    {!isForm && <InsertWithLLM />}
                 </DialogContent>
             </Dialog>
         </>

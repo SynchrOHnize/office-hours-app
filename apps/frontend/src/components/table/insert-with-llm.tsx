@@ -28,7 +28,7 @@ const textSchema = z.object({
     }),
 })
 
-export function InsertWithAI() {
+export function InsertWithLLM() {
     const [course, setCourse] = useState<Course | null>(null);
     const [parsedResults, setParsedResults] = useState<PreviewOfficeHour[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -71,7 +71,7 @@ export function InsertWithAI() {
                     if (response?.statusCode !== 200) {
                         toast({
                             title: "Error!",
-                            description: "Failed to parse office hours into text with AI.",
+                            description: "Failed to parse office hours into text with LLM.",
                             variant: "destructive",
                         });
                     } else {
@@ -207,7 +207,7 @@ export function InsertWithAI() {
 
                     <hr className="my-4 border-dotted border-1 border-gray-300" />
                     <Button type="submit" variant={"outline"} className="font-bold text-md">
-                        {isLoading ? <>Parsing <Loader2 className="mr-2 h-5 w-5 animate-spin" /></> : "Parse with AI"}
+                        {isLoading ? <>Parsing <Loader2 className="mr-2 h-5 w-5 animate-spin" /></> : "Parse with LLM"}
                     </ Button>
                     <span className="text-xs font-normal mx-auto flex items-center justify-center gap-1">
                         Powered by GPT-4o

@@ -8,10 +8,8 @@ import './index.css'
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
 if (!PUBLISHABLE_KEY) {
-  throw new Error('Add your Clerk publishable key to the .env.local file')
+  throw new Error('Add your Clerk publishable key to the .env file')
 }
-
-console.log('Publishable key:', PUBLISHABLE_KEY)
 
 const queryClient = new QueryClient()
 

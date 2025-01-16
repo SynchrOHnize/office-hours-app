@@ -100,12 +100,12 @@ export const AddCourseInput = ({
                                 {userCourseCodes.map(code => (
                                     <Badge key={code} variant="secondary" className="rounded-sm py-1 pr-2">
                                         {code}
-                                        <button
-                                            className="ml-1 hover:bg-slate-200 rounded-full"
+                                        <div
+                                            className="ml-1 hover:bg-slate-200 rounded-full cursor-pointer"
                                             onClick={(e) => handleRemove(e, code)}
                                         >
-                                            <X className="h-3 w-3" />
-                                        </button>
+                                            <X className="h-3 w-3" onClick={(e) => handleRemove(e, code)} />
+                                        </div>
                                     </Badge>
                                 ))}
                             </div>

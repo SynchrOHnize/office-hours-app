@@ -6,7 +6,7 @@ import { ServiceResponse } from "@/common/schemas/serviceResponse";
 import { StatusCodes } from "http-status-codes";
 import { logger } from "@/server";
 
-export class AIService {
+export class LlmService {
   private llm: ChatOpenAI;
   private cheapLlm: ChatOpenAI;
   constructor() {

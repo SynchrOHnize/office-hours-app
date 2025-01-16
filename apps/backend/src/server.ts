@@ -12,7 +12,7 @@ import rateLimiter from "@/common/middleware/rateLimiter";
 import requestLogger from "@/common/middleware/requestLogger";
 import { env } from "@/common/utils/envConfig";
 import { searchRouter } from "./api/search/searchRouter";
-import { aiRouter } from "./api/ai/aiRouter";
+import { llmRouter } from "./api/llm/llmRouter";
 
 const logger = pino({ name: "server start" });
 const app: Express = express();
@@ -38,7 +38,7 @@ apiRouter.use("/users", userRouter);
 apiRouter.use("/web-scraper", webScraperRouter);
 apiRouter.use("/canvas", canvasRouter);
 apiRouter.use("/search", searchRouter);
-apiRouter.use("/ai", aiRouter);
+apiRouter.use("/llm", llmRouter);
 
 app.use("/api", apiRouter);
 // Error handlers

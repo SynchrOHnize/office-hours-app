@@ -12,6 +12,7 @@ export interface User {
   ical_link: string | null;
   created_at: string;
   updated_at: string;
+  new?: boolean;
 }
 
 export interface OfficeHour {
@@ -51,6 +52,17 @@ export interface Payload {
   message: string;
 }
 
+export const healthCheck = async (): Promise<boolean> => {
+  try {
+    const response = await api.get(`/health`);
+    const payload = response.data;
+    return payload.statusCode === 200;
+  } catch (error) {
+    console.error("Error fetching health check:", error);
+    return false;
+  }
+}
+
 export const storeUser = async (): Promise<User | null> => {
   try {
     const response = await api.post(`/users/me`);
@@ -71,6 +83,7 @@ export const fetchUser = async (): Promise<User | null> => {
   } catch (error) {
     const user = await storeUser();
     if (user) {
+      user.new = true;
       return user;
     }
     console.error("Error fetching user:", error);
@@ -229,7 +242,7 @@ export const parseOfficeHoursJson = async (
   raw_data: string
 ): Promise<AxiosResponse | null> => {
   try {
-    const response = await api.post(`/ai/json/office-hours`, { raw_data, course_id });
+    const response = await api.post(`/llm/json/office-hours`, { raw_data, course_id });
     return response; // Return the full AxiosResponse object
   } catch (error: any) {
     if (error.response) {
@@ -247,7 +260,7 @@ export const parseOfficeHoursText = async (
   raw_data: string
 ): Promise<Payload | null> => {
   try {
-    const response = await api.post(`/ai/text/office-hours`, { raw_data });
+    const response = await api.post(`/llm/text/office-hours`, { raw_data });
     const payload = response.data;
     return payload;
   } catch (error: any) {
