@@ -57,7 +57,7 @@ export class UserService {
       console.log(firstName, lastName);
     }
     
-    await clerkClient.users.updateUser(id, { firstName });
+    await clerkClient.users.updateUser(id, { firstName, lastName });
 
     const email = clerkUser.primaryEmailAddress?.emailAddress || "";
     const imageUrl = clerkUser.imageUrl;
