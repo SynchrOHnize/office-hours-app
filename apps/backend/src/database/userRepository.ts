@@ -36,8 +36,8 @@ export class UserRepository {
         email,
         role
       ]);
-      rows = await this.db.query("SELECT * FROM users WHERE id = ?", [id]);
-      return rows[0] as User;
+      const [newRows]: [any[], FieldPacket[]] = await this.db.query("SELECT * FROM users WHERE id = ?", [id]);
+      return newRows[0] as User;
     } catch (err) {
       console.error("Error saving user to database", err);
       throw new Error("Failed to save user");

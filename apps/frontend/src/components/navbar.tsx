@@ -2,6 +2,7 @@ import { fetchUser } from '@/services/userService.ts';
 import project_logo from '../assets/project-logo.png';
 import AccountButton from './account-button.tsx';
 import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 const NavBar = ({ isPublic = false }: { isPublic?: boolean }) => {
 
@@ -18,11 +19,11 @@ const NavBar = ({ isPublic = false }: { isPublic?: boolean }) => {
       </a>
 
       {!isPublic && <div className="flex gap-4 text-center justify-center items-center">
-        <p className={`text-xl font-semibold ${user?.role.toLowerCase() === 'student'
+        <p className={`text-xl font-semibold ${user && user.role.toLowerCase() === 'student'
             ? 'text-green-600'
             : 'text-red-600'
           }`}>
-          {user?.role.toUpperCase() || 'UNKNOWN'}
+          {user && user.role.toUpperCase() || 'UNKNOWN'}
         </p>
         <AccountButton />
       </div>}

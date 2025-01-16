@@ -1,4 +1,4 @@
-import { AxiosResponse } from "axios";
+import { AxiosError, AxiosResponse } from "axios";
 import api from "./api";
 import { capitalize } from "@/lib/utils";
 
@@ -8,7 +8,7 @@ export interface User {
   first_name: string | null;
   last_name: string | null;
   img_url: string | null;
-  role: 'admin' | 'professor' | 'teaching_assistant' | 'student';
+  role: "admin" | "professor" | "teaching_assistant" | "student";
   ical_link: string | null;
   created_at: string;
   updated_at: string;
@@ -61,33 +61,38 @@ export const healthCheck = async (): Promise<boolean> => {
     console.error("Error fetching health check:", error);
     return false;
   }
-}
+};
 
 export const storeUser = async (): Promise<User | null> => {
   try {
     const response = await api.post(`/users/me`);
     const payload = response.data;
-    return payload;
+    return payload.data;
   } catch (error) {
     console.error("Error storing user:", error);
     return null;
   }
-}
+};
 
 // Fetch user by ID
 export const fetchUser = async (): Promise<User | null> => {
+  let user = null;
   try {
     const response = await api.get("/users/me");
     const payload = response.data;
-    return payload.data;
-  } catch (error) {
-    const user = await storeUser();
-    if (user) {
-      user.new = true;
-      return user;
+    user = payload.data;
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      user = await storeUser();
+      if (user) {
+        user.new = true;
+      }
+    } else {
+      console.error("Error fetching user:", error);
     }
-    console.error("Error fetching user:", error);
-    return null;
+  } finally {
+    console.log(user);
+    return user;
   }
 };
 
@@ -100,7 +105,7 @@ export const fetchAllCourses = async (): Promise<Course[]> => {
     console.error("Error fetching courses:", error);
     return [];
   }
-}
+};
 
 // Fetch courses for a user by ID
 export const fetchUserCourses = async (): Promise<Course[]> => {
@@ -123,7 +128,7 @@ export const storeUserCourse = async (courseId: number): Promise<Payload | null>
     console.error("Error storing user course:", error);
     return null;
   }
-}
+};
 
 export const deleteUserCourse = async (courseId: number): Promise<Payload | null> => {
   try {
@@ -134,7 +139,7 @@ export const deleteUserCourse = async (courseId: number): Promise<Payload | null
     console.error("Error deleting user course:", error);
     return null;
   }
-}
+};
 
 export const fetchCourseById = async (courseId: number): Promise<Course | null> => {
   try {
@@ -145,35 +150,33 @@ export const fetchCourseById = async (courseId: number): Promise<Course | null> 
     console.error("Error fetching course:", error);
     return null;
   }
-}
+};
 
 export const fetchOfficeHours = async (): Promise<OfficeHour[]> => {
   try {
     const response = await api.get(`/users/me/office-hours`);
     const payload = response.data;
     const officeHours = payload.data as OfficeHour[];
-    return officeHours.map(item => ({
+    return officeHours.map((item) => ({
       ...item,
       day: capitalize(item.day),
       mode: capitalize(item.mode),
-      start_time: new Date(`2000-01-01T${item.start_time}`).toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
+      start_time: new Date(`2000-01-01T${item.start_time}`).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
       }),
-      end_time: new Date(`2000-01-01T${item.end_time}`).toLocaleTimeString('en-US', {
-        hour: 'numeric', 
-        minute: '2-digit',
-        hour12: true
-      })
-    }))
+      end_time: new Date(`2000-01-01T${item.end_time}`).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }),
+    }));
   } catch (error) {
     console.error("Error fetching office hours:", error);
     return [];
   }
 };
-
-
 
 export const sendFeedback = async (rating: number, content: string): Promise<Payload | null> => {
   try {
@@ -194,25 +197,26 @@ export const getIcalFile = async (): Promise<Payload | null> => {
     const response = await api.get(`/users/me/ical-file`);
     const payload = response.data;
     return payload;
-  } catch(error) {
+  } catch (error) {
     console.error("Error fetching ical file:", error);
     return null;
   }
-}
+};
 
-export const getIcalFileByIds = async(ids: number[]): Promise<Payload | null> => {
+export const getIcalFileByIds = async (ids: number[]): Promise<Payload | null> => {
   try {
-    const response = await api.get('/users/ical-file', {
+    const response = await api.get("/users/ical-file", {
       params: {
-        ids: ids.join(',')
-      }});
+        ids: ids.join(","),
+      },
+    });
     const payload = response.data;
     return payload;
-  } catch(error) {
+  } catch (error) {
     console.error("Error fetching ical file:", error);
     return null;
   }
-}
+};
 
 export const storeOfficeHour = async (courseId: number, officeHour: Record<string, any>): Promise<Payload | null> => {
   officeHour.course_id = courseId;
@@ -224,7 +228,7 @@ export const storeOfficeHour = async (courseId: number, officeHour: Record<strin
     console.error("Error storing office hour:", error);
     return null;
   }
-}
+};
 
 export const storeOfficeHourList = async (officeHours: Record<string, any>[]): Promise<Payload | null> => {
   try {
@@ -235,12 +239,9 @@ export const storeOfficeHourList = async (officeHours: Record<string, any>[]): P
     console.error("Error storing office hour list:", error);
     return null;
   }
-}
+};
 
-export const parseOfficeHoursJson = async (
-  course_id: number,
-  raw_data: string
-): Promise<AxiosResponse | null> => {
+export const parseOfficeHoursJson = async (course_id: number, raw_data: string): Promise<AxiosResponse | null> => {
   try {
     const response = await api.post(`/llm/json/office-hours`, { raw_data, course_id });
     return response; // Return the full AxiosResponse object
@@ -256,9 +257,7 @@ export const parseOfficeHoursJson = async (
   }
 };
 
-export const parseOfficeHoursText = async (
-  raw_data: string
-): Promise<Payload | null> => {
+export const parseOfficeHoursText = async (raw_data: string): Promise<Payload | null> => {
   try {
     const response = await api.post(`/llm/text/office-hours`, { raw_data });
     const payload = response.data;
@@ -269,7 +268,7 @@ export const parseOfficeHoursText = async (
 };
 
 export const updateOfficeHour = async (id: number, officeHour: Record<string, any>): Promise<Payload | null> => {
-  console.log(officeHour.id)
+  console.log(officeHour.id);
   try {
     const response = await api.put(`/users/office-hours/${id}`, officeHour);
     const payload = response.data;
@@ -278,21 +277,22 @@ export const updateOfficeHour = async (id: number, officeHour: Record<string, an
     console.error("Error updating office hour:", error);
     return null;
   }
-}
+};
 
-export const deleteOfficeHours = async(ids: number[]): Promise<Payload | null> => {
+export const deleteOfficeHours = async (ids: number[]): Promise<Payload | null> => {
   try {
-    const response = await api.delete('users/office-hours', {
+    const response = await api.delete("users/office-hours", {
       params: {
-        ids: ids.join(',')
-      }});
+        ids: ids.join(","),
+      },
+    });
     const payload = response.data;
     return payload;
-  } catch(error) {
+  } catch (error) {
     console.error("Error deleting office hour:", error);
     return null;
   }
-}
+};
 
 export const storeCourse = async (course: Record<string, any>): Promise<Payload | null> => {
   try {
@@ -303,4 +303,4 @@ export const storeCourse = async (course: Record<string, any>): Promise<Payload 
     console.error("Error storing course:", error);
     return null;
   }
-}
+};

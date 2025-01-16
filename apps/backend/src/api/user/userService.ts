@@ -47,12 +47,20 @@ export class UserService {
       return ServiceResponse.failure("No Clerk User found", null, StatusCodes.NOT_FOUND);
     }
 
-    const firstName = clerkUser.firstName?.replace(/,/g, "") || "";
+    let firstName = clerkUser.firstName?.replace(/,/g, "") || "";
+    let lastName = clerkUser.lastName || "";
+    console.log(firstName, lastName);
+    console.log(clerkUser.firstName, clerkUser.lastName);
+    if (firstName !== clerkUser.firstName || lastName.includes(".")) {
+      console.log("Swapping first and last name because it's messed up in Microsoft.");
+      [firstName, lastName] = [lastName, firstName]; // Swap first and last name when Microsoft stupidly reverses them
+      console.log(firstName, lastName);
+    }
+    
     await clerkClient.users.updateUser(id, { firstName });
 
     const email = clerkUser.primaryEmailAddress?.emailAddress || "";
     const imageUrl = clerkUser.imageUrl;
-    const lastName = clerkUser.lastName || "";
     const user = await this.userRepository.storeUser(id, imageUrl, firstName, lastName, email, role);
     if (!user) {
       return ServiceResponse.failure("Error storing user", null, StatusCodes.NOT_FOUND);
