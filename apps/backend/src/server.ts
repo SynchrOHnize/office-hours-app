@@ -5,7 +5,6 @@ import { pino } from "pino";
 
 import { healthCheckRouter } from "@/api/healthCheck/healthCheckRouter";
 import { userRouter } from "@/api/user/userRouter";
-import { webScraperRouter } from "./api/webScraper/webScraperRouter";
 import { canvasRouter } from "./api/canvas/canvasRouter";
 import errorHandler from "@/common/middleware/errorHandler";
 import rateLimiter from "@/common/middleware/rateLimiter";
@@ -35,7 +34,6 @@ const apiRouter = express.Router();
 // Routes
 apiRouter.use("/health", healthCheckRouter);
 apiRouter.use("/users", userRouter);
-apiRouter.use("/web-scraper", webScraperRouter);
 apiRouter.use("/canvas", canvasRouter);
 apiRouter.use("/search", searchRouter);
 apiRouter.use("/llm", llmRouter);
