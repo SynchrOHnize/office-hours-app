@@ -25,17 +25,13 @@ async function createOrgSecrets() {
         return [key, value];
       });
 
-    // Your GitHub organization name
-    const orgName = 'OHsync';
-
     for (const [key, value] of envVars) {
       if (!key || !value) continue;
 
       try {
         // Escape any quotes in the value to prevent command injection
         const escapedValue = value.replace(/"/g, '\\"');
-        
-        await execAsync(`gh secret set "${key}" -b"${escapedValue}" --org "${orgName}" --visibility=all`);
+        await execAsync(`gh secret set "${key}" -b"${escapedValue}" -R OHsync/ohsync`);
         console.log(`✅ Successfully set secret: ${key}`);
       } catch (error) {
         console.error(`❌ Failed to set secret ${key}:`, error.message);
