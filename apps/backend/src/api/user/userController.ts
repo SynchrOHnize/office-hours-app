@@ -116,15 +116,7 @@ export class UserController {
 
   public storeOfficeHour: RequestHandler = async (req: Request, res: Response) => {
     const userId = req.auth.userId;
-    const user = await this.userService.getById(userId);
-    const role = user?.data?.role || "";
-    const authorizedRoles = ["professor", "admin"];
-    if (!authorizedRoles.includes(role)) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
     const serviceResponse = await this.officeHourService.storeOfficeHour(req.body, userId);
-
     if (serviceResponse.data) {
       console.log("Saving course for user after storing office hour");
       const storeResponse = await this.userCourseService.storeUserCourse(userId, serviceResponse.data.course_id);
@@ -133,19 +125,11 @@ export class UserController {
         return handleServiceResponse(storeResponse, res);
       }
     }
-
     return handleServiceResponse(serviceResponse, res);
   };
 
   public storeListOfficeHours: RequestHandler = async (req: Request, res: Response) => {
     const userId = req.auth.userId;
-    const user = await this.userService.getById(userId);
-    const role = user?.data?.role || "";
-    const authorizedRoles = ["professor", "admin"];
-    if (!authorizedRoles.includes(role)) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
     const serviceResponse = await this.officeHourService.storeListOfficeHour(req.body, userId);
     if (serviceResponse.data) {
       console.log("Saving course for user after storing office hour");
@@ -160,30 +144,25 @@ export class UserController {
 
   public deleteOfficeHours: RequestHandler = async (req: Request, res: Response) => {
     const userId = req.auth.userId;
-    if (req.query.ids !== undefined) {
-      let ids = req.query.ids.toString();
-      const serviceResponse = await this.officeHourService.deleteOfficeHours(ids, userId);
-      return handleServiceResponse(serviceResponse, res);
-    } else {
-      return handleServiceResponse(ServiceResponse.failure("Missing query parameters", null), res);
+    if (!req.query.ids) {
+      return handleServiceResponse(ServiceResponse.failure("Missing query parameters", null, 400), res);
     }
+    let ids = req.query.ids.toString().split(",").map(Number);
+    const serviceResponse = await this.officeHourService.deleteOfficeHours(ids, userId);
+    return handleServiceResponse(serviceResponse, res);
   };
 
   public storeCourse: RequestHandler = async (req: Request, res: Response) => {
-    const userId = req.auth.userId;
     const { course_id, course_code, title } = req.body;
     const serviceResponse = await this.userCourseService.storeCourse(course_id, course_code, title);
     return handleServiceResponse(serviceResponse, res);
   };
 
   public getCourse: RequestHandler = async (req: Request, res: Response) => {
-    const userId = req.auth.userId;
     const course_id = Number(req.params.course_id);
-
     if (isNaN(course_id)) {
-      return res.status(400).json({ error: "Invalid course ID" });
+      return handleServiceResponse(ServiceResponse.failure("Invalid course ID", null, 400), res);
     }
-
     const serviceResponse = await this.userCourseService.getByCourseId(course_id);
     return handleServiceResponse(serviceResponse, res);
   };
@@ -197,7 +176,6 @@ export class UserController {
     const userId = req.auth.userId;
     const officeHourId = Number(req.params.office_hour_id);
     const serviceResponse = await this.officeHourService.updateOfficeHour(officeHourId, req.body, userId);
-
     return handleServiceResponse(serviceResponse, res);
   };
 }
