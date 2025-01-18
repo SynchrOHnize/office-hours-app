@@ -5,8 +5,7 @@
   "main": "index.ts",
   "private": true,
   "scripts": {
-    "dev": "tsx watch --clear-screen=false src/index.ts | pino-pretty",
-    "prod": "tsx watch --clear-screen=false --env-file=.env.production src/index.ts | pino-pretty",
+    "dev": "bun run --watch --no-clear-screen src/index.ts | pino-pretty",
     "build": "NODE_ENV=production bun build src/index.ts --target=node --outdir dist",
     "start": "NODE_ENV=production bun run dist/index.js",
     "clean": "rimraf dist coverage",
@@ -56,7 +55,6 @@
     "rimraf": "^6.0.0",
     "supertest": "^7.0.0",
     "tsup": "^8.0.2",
-    "tsx": "^4.7.2",
     "typescript": "^5.4.4",
     "vite-tsconfig-paths": "^5.0.0",
     "vitest": "^2.0.0"

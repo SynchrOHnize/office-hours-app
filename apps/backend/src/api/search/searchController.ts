@@ -4,6 +4,7 @@ import { SearchService } from "./searchService";
 import { DirectorySearchSchema } from "@/common/schemas/directorySearchSchema";
 
 export class SearchController {
+
   private searchService: SearchService;
 
   constructor(searchService: SearchService) {
@@ -21,4 +22,10 @@ export class SearchController {
     const serviceResponse = await this.searchService.searchClasses(keyword);
     return handleServiceResponse(serviceResponse, res);
   };
+
+  public listGraduateCourses: RequestHandler = async (_req: Request, res: Response) => {
+    const serviceResponse = await this.searchService.listGraduateCourses();
+    return handleServiceResponse(serviceResponse, res);
+  };
+
 }
