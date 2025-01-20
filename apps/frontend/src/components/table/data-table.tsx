@@ -328,19 +328,27 @@ export function DataTable<TData, TValue>({
                                     <TableRow
                                         key={row.id}
                                         data-state={row.getIsSelected() && "selected"}
-                                        className={cn({
+                                         className={cn({
                                             'bg-blue-50': officeHour.mode === 'Remote' && !isRecentlyEdited(updated_at),
                                             'bg-blue-100': officeHour.mode === 'Remote' && isRecentlyEdited(updated_at),
                                             'bg-green-100': officeHour.mode === 'In-person' && !isRecentlyEdited(updated_at),
                                             'bg-green-200': officeHour.mode === 'In-person' && isRecentlyEdited(updated_at),
                                             'bg-yellow-50': officeHour.mode === 'Hybrid' && !isRecentlyEdited(updated_at),
-                                            'bg-yellow-100': officeHour.mode === 'Hybrid' && isRecentlyEdited(updated_at),
+                                            'bg-yellow-200': officeHour.mode === 'Hybrid' && isRecentlyEdited(updated_at),
+                                            // 'bg-gradient-to-r from-white to-gray-100': isRecentlyEdited(updated_at),
                                         })}
 
                                     >
                                         {/* Conditionally render symbol for recently edited records */}
                                         {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
+                                            <TableCell key={cell.id}
+                                                className={cn({
+                                                    'text-blue-800': officeHour.mode === 'Remote' && cell.column.id === 'mode',
+                                                    'text-green-800': officeHour.mode === 'In-person' && cell.column.id === 'mode',
+                                                    'text-yellow-800': officeHour.mode === 'Hybrid' && cell.column.id === 'mode',
+                                                    'font-bold': cell.column.id === 'course_code',
+                                                })}
+                                            >
                                                 {/* Special handling for link columns */}
                                                 {cell.column.id === 'link' ? (
                                                     <TruncatedText text={cell.getValue() as string} />

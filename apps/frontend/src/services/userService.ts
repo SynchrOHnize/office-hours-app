@@ -1,4 +1,4 @@
-import { AxiosError, AxiosResponse } from "axios";
+import { AxiosResponse } from "axios";
 import api from "./api";
 import { capitalize } from "@/lib/utils";
 
@@ -38,6 +38,8 @@ export interface PreviewOfficeHour {
   mode: string;
   location: string;
   link: string;
+  complete: boolean;
+  new: boolean;
 }
 
 export interface Course {
@@ -244,6 +246,36 @@ export const storeOfficeHourList = async (officeHours: Record<string, any>[]): P
 export const parseOfficeHoursJson = async (course_id: number, raw_data: string): Promise<AxiosResponse | null> => {
   try {
     const response = await api.post(`/llm/json/office-hours`, { raw_data, course_id });
+    return response; // Return the full AxiosResponse object
+  } catch (error: any) {
+    if (error.response) {
+      // Return the error response if it exists
+      return error.response;
+    } else {
+      // Log and return null for unexpected errors
+      console.error("Unexpected error while parsing office hours:", error);
+      return null;
+    }
+  }
+};
+
+export const parseOfficeHoursJsonStream = async (course_id: number, raw_data: string, handleStreamedData: (parsed: PreviewOfficeHour) => void): Promise<AxiosResponse | null> => {
+  try {
+    let prev = "";
+    const response = await api.post(`/llm/stream/office-hours`, { raw_data, course_id }, {
+      onDownloadProgress: progressEvent => {
+        const xhr = progressEvent.event.target
+        const { responseText } = xhr
+        const chunks = responseText.replace(prev, "").replaceAll("}{", "}\n{").split("\n")
+        for (const chunk of chunks) {
+          console.log(chunk)
+          const parsed = JSON.parse(chunk) as PreviewOfficeHour;
+          handleStreamedData(parsed)
+        } 
+        prev = responseText
+
+      }
+    });
     return response; // Return the full AxiosResponse object
   } catch (error: any) {
     if (error.response) {
