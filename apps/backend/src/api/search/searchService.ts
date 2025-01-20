@@ -1,9 +1,9 @@
-import { StatusCodes } from "http-status-codes";
-import { ServiceResponse } from "@/common/schemas/serviceResponse";
-import { logger } from "@/server";
 import axios, { type AxiosResponse } from "axios";
+import { StatusCodes } from "http-status-codes";
 import { z } from "zod";
+import { ServiceResponse } from "@/common/schemas/serviceResponse";
 import { DirectorySearchSchema } from "@/common/schemas/directorySearchSchema";
+import { logger } from "@/server";
 
 interface DirectoryPerson {
   firstName: string;
@@ -121,46 +121,43 @@ export class SearchService {
   }
 
   async listGraduateCourses(): Promise<ServiceResponse<GraduateCourse[] | null>> {
-    logger.info(`graduate-course-list: starting web scrape`);
-
     let response: AxiosResponse<string, any> | null;
-    response = await axios.get<string>('https://gradcatalog.ufl.edu/graduate/courses-az/english/', {
-      responseType: 'text'
-    });
+    let match: RegExpExecArray | null;
 
-    if (!response.data)
-      return ServiceResponse.failure('Failed to retrieve course list', null);
+    const indexUrl = 'https://gradcatalog.ufl.edu/graduate/courses-az/english/';
+    try {
+      response = await axios.get<string>(indexUrl, { responseType: 'text' });
+    } catch (e: any) {
+      logger.error(`Failed to retrieve ${indexUrl}: ${e.message}`);
+      return ServiceResponse.failure('Internal server error', null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
 
     const indexHtml = response.data;
     const categoryRegex = /<li><a href="\/graduate\/courses-az\/(\w+)\/">.*?<\/a><\/li>/g;
     const courses: GraduateCourse[] = [];
 
-    let match: RegExpExecArray | null;
     let count = 0;
     while ((match = categoryRegex.exec(indexHtml)) !== null) {
-      const url = `https://gradcatalog.ufl.edu/graduate/courses-az/${match[1]}/`;
-      const courseRegex = /<strong>\s+([A-Z]{3}\s\d{4})\s+(.*?)\s+<span/g;
-      logger.info(`graduate-course-list: ${match[1]} ${count++}`);
+      const categoryUrl = `https://gradcatalog.ufl.edu/graduate/courses-az/${match[1]}/`;
+      const courseRegex = /<strong>\s+([A-Z]{3}\s+\d{4}[CL]?)\s+(.*?)\s+<span/g;
+      logger.debug(`graduate-course-list: ${match[1]} ${count++}`);
 
       response = null;
       while (response === null) {
         try {
-          response = await axios.get<string>(url, { responseType: 'text' });
+          response = await axios.get<string>(categoryUrl, { responseType: 'text' });
         } catch (e: any) {
           if (e.code !== 'ECONNRESET') {
-            logger.error(`Failed to retrieve ${url}: ${(e as Error).message}`);
-            return ServiceResponse.failure("Internal server error", [], StatusCodes.INTERNAL_SERVER_ERROR);
+            logger.error(`Failed to retrieve ${categoryUrl}: ${e.message}`);
+            return ServiceResponse.failure('Internal server error', null, StatusCodes.INTERNAL_SERVER_ERROR);
           }
         }
       }
 
-      if (!response.data)
-        return ServiceResponse.failure('Failed to retrieve course list', null);
-
       const categoryHtml = response.data;
       while ((match = courseRegex.exec(categoryHtml)) !== null) {
         const id = match[1];
-        const name = match[2];
+        const name = match[2].replace(/&amp;/g, '&');
         courses.push({ id, name });
       }
     }
