@@ -1,8 +1,8 @@
-# OHSync
+# OHsync
 
 <https://ohsync.me>
 
-**OHSync** is an application that allows UF professors and TAs to publish office
+**OHsync** is an application that allows UF professors and TAs to publish office
 hours in a systematic way, and allows students to view these office hours.
 
 ## Getting Started
