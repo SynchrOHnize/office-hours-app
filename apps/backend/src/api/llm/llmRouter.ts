@@ -11,3 +11,4 @@ const llmController = new LlmController(llmService);
 
 llmRouter.post("/json/office-hours", llmController.parseOfficeHoursJson);
 llmRouter.post("/text/office-hours", llmController.parseOfficeHoursText);
+llmRouter.post("/stream/office-hours", llmController.parseOfficeHoursJsonStream);

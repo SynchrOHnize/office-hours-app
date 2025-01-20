@@ -59,7 +59,7 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
                     description: "Failed to save course.",
                     variant: "destructive",
                 });
-                
+
                 return;
             }
             await queryClient.invalidateQueries({ queryKey: ['courses'] });
@@ -69,8 +69,8 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
     };
 
     return (
-        <>
-            <FormItem className="flex flex-col">
+        <div className="flex gap-4 items-center">
+            <FormItem className="w-1/2">
                 <FormLabel>Course Code (Search)</FormLabel>
                 <FormControl>
                     <div className="relative">
@@ -85,6 +85,7 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
                                 }, 200);
                             }}
                             onChange={(e) => handleInput(e.target.value)}
+                            className="w-full"
                         />
                         {(searchResults?.length || 0) > 0 && isFocused && (
                             <Command className="h-fit absolute top-full left-0 right-0 z-50 mt-1 border rounded-md bg-popover">
@@ -92,12 +93,12 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
                                     <CommandGroup className="overflow-auto">
                                         {searchResults?.map((result) => (
                                             <CommandItem
-                                                key={result.key}
+                                                key={result?.key}
                                                 onSelect={() => handleSelectClass(result)}
                                                 className="cursor-pointer"
                                             >
                                                 <span>
-                                                    {result.code.replace(/\s+/g, "")} - {result.title}
+                                                    {result?.code.replace(/\s+/g, "")} - {result?.title}
                                                 </span>
                                             </CommandItem>
                                         ))}
@@ -109,8 +110,7 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
                 </FormControl>
                 <FormMessage />
             </FormItem>
-
-            <FormItem>
+            <FormItem className="w-1/2">
                 <FormLabel>Course Title</FormLabel>
                 <FormControl>
                     <Input
@@ -126,6 +126,6 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
                 </FormControl>
                 <FormMessage />
             </FormItem>
-        </>
+        </div>
     );
 };
