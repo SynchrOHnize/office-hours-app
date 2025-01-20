@@ -134,13 +134,13 @@ export class SearchService {
 
     const indexHtml = response.data;
     const categoryRegex = /<li><a href="\/graduate\/courses-az\/(\w+)\/">.*?<\/a><\/li>/g;
-    const courses: GraduateCourse[] = [];
+    const courses: Record<string, GraduateCourse> = Object.create(null);
 
     let count = 0;
     while ((match = categoryRegex.exec(indexHtml)) !== null) {
       const categoryUrl = `https://gradcatalog.ufl.edu/graduate/courses-az/${match[1]}/`;
       const courseRegex = /<strong>\s+([A-Z]{3}\s+\d{4}[CL]?)\s+(.*?)\s+<span/g;
-      logger.debug(`graduate-course-list: ${match[1]} ${count++}`);
+      logger.debug(`graduate-courses-list: ${match[1]} ${count++}`);
 
       response = null;
       while (response === null) {
@@ -158,11 +158,12 @@ export class SearchService {
       while ((match = courseRegex.exec(categoryHtml)) !== null) {
         const id = match[1];
         const name = match[2].replace(/&amp;/g, '&');
-        courses.push({ id, name });
+        if (!(id in courses))
+          courses[id] = { id, name };
       }
     }
 
-    return ServiceResponse.success('Success', courses);
+    return ServiceResponse.success('Success', Object.values(courses));
   }
 
 }
