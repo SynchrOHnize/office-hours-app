@@ -94,7 +94,7 @@ const formSchema = z.object({
 });
 
 function convertTo24Hour(time12h: string): string {
-    const [time, modifier] = time12h.split(' ');
+    const [time, modifier] = time12h.toUpperCase().split(' ');
 
     let [hours, minutes] = time.split(':');
 
@@ -106,7 +106,9 @@ function convertTo24Hour(time12h: string): string {
         hours = (parseInt(hours, 10) + 12).toString();
     }
 
-    return `${hours.padStart(2, '0')}:${minutes}`;
+    const final = `${hours.padStart(2, '0')}:${minutes}`;
+    console.log(final)
+    return final;
 }
 
 function convertTo12Hour(time24h: string): string {
@@ -119,8 +121,9 @@ function convertTo12Hour(time24h: string): string {
 
 export function EditPreview({ row }: { row: any }) {
     const { toast } = useToast();
+    console.log(row.host)
 
-    const form = useForm<z.infer<typeof formSchema>>({
+    let form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             host: row.host || "",
@@ -132,6 +135,19 @@ export function EditPreview({ row }: { row: any }) {
             link: row.link || "",
         },
     });
+    
+    const onClick = () => {
+        // Reset all the values the same way as before, using the same functions
+        form.reset({
+            host: row.host || "",
+            day: (row.day || "").toLowerCase(),
+            start_time: (convertTo24Hour(row.start_time) || "").toLowerCase(),
+            end_time: (convertTo24Hour(row.end_time) || "").toLowerCase(),
+            mode: (row.mode || "").toLowerCase(),
+            location: row.location || "",
+            link: row.link || "",
+        });
+    }
 
     const mode = form.watch("mode");
 
@@ -153,7 +169,7 @@ export function EditPreview({ row }: { row: any }) {
         <>
             <Dialog>
                 <DialogTrigger className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-1 text-sm font-medium border border-gray-700 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900">
-                    <Edit className="h-4 w-4" />
+                    <Edit onClick={onClick} className="h-4 w-4" />
                 </DialogTrigger>
                 <DialogContent className="min-w-96 overflow-y-scroll max-h-screen">
                     <DialogHeader>

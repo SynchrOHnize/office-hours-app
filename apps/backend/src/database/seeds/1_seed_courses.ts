@@ -21,16 +21,6 @@ export async function seed(knex: Knex): Promise<void> {
       course_id: 9095,
       course_code: "CAP4770",
       title: "Introduction to Data Science",
-    },
-    {
-      course_id: 8769,
-      course_code: "EEL3008",
-      title: "Physics of Electrical Engineering"
-    },
-    {
-      course_id: 7563,
-      course_code: "FIN3403",
-      title: "Business Finance"
     }
   ]);
 }
