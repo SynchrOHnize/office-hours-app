@@ -10,7 +10,8 @@ export default {
   theme: {
   	extend: {
   		fontFamily: {
-  			sans: ['Roboto', 'sans-serif']
+  			sans: ['Roboto', 'sans-serif'],
+			times: ['"Times New Roman"', 'serif'], // Add Times New Roman
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
@@ -58,7 +59,16 @@ export default {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			}
-  		}
+  		},
+		animation: {
+			gradient: 'gradient-move 3s infinite',
+		},
+		keyframes: {
+			'gradient-move': {
+				'0%': { backgroundPosition: '0% 50%' },
+				'100%': { backgroundPosition: '100% 50%' },
+			},
+		},
   	}
   },
   plugins: [tailwindAnimate],

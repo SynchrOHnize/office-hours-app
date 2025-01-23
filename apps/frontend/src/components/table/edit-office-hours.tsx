@@ -98,7 +98,7 @@ const formSchema = z.object({
 // Time is currently stored as a string in 12-hour format (e.g., "12:00 PM")
 // But TimeField component expects time in 24-hour format (e.g., "12:00")
 function convertTo24Hour(time12h: string): string {
-    const [time, modifier] = time12h.split(' ');
+    const [time, modifier] = time12h.toUpperCase().split(' ');
 
     let [hours, minutes] = time.split(':');
 
@@ -133,6 +133,19 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
         },
     });
 
+    const onClick = () => {
+        // Reset all the values the same way as before, using the same functions
+        form.reset({
+            host: row.host || "",
+            day: (row.day || "").toLowerCase(),
+            start_time: (convertTo24Hour(row.start_time) || "").toLowerCase(),
+            end_time: (convertTo24Hour(row.end_time) || "").toLowerCase(),
+            mode: (row.mode || "").toLowerCase(),
+            location: row.location || "",
+            link: row.link || "",
+        });
+    }
+
 
     const mode = form.watch("mode")
 
@@ -164,7 +177,7 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
         <>
             <Dialog>
                 <DialogTrigger className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-1 text-sm font-medium border border-gray-700 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900">
-                    <Edit className="h-4 w-4" />
+                    <Edit onClick={onClick} className="h-4 w-4" />
                 </DialogTrigger>
                 <DialogContent className="min-w-96 overflow-y-scroll max-h-screen">
                     <DialogHeader>

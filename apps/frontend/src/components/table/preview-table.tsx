@@ -15,11 +15,11 @@ import { EditPreview } from "./edit-preview";
 import { format, parse } from "date-fns";
 import { useEffect, useState } from "react";
 import { Loader2, Trash2 } from "lucide-react";
-import { capitalize } from "@/lib/utils";
+import { capitalize, cn } from "@/lib/utils";
 
 
 
-export const PreviewTable = ({ data, setData }: { data: PreviewOfficeHour[], setData: (data: PreviewOfficeHour[]) => void }) => {
+export const PreviewTable = ({ bottomRef, data, setData }: { bottomRef: React.RefObject<HTMLButtonElement>, data: PreviewOfficeHour[], setData: (data: PreviewOfficeHour[]) => void }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [invalid, setInvalid] = useState(false);
@@ -78,6 +78,9 @@ export const PreviewTable = ({ data, setData }: { data: PreviewOfficeHour[], set
     setLoading(false);
   };
 
+  const renderInvalid = (value: string) => {
+    return value === "INVALID" ? <div className=" text-red-400 font-bold">INVALID</div> : value;
+  };
 
   return (
     <>
@@ -91,39 +94,49 @@ export const PreviewTable = ({ data, setData }: { data: PreviewOfficeHour[], set
             <TableHead>Mode</TableHead>
             <TableHead>Location</TableHead>
             <TableHead>Link</TableHead>
+            <TableHead>Edit</TableHead>
+            <TableHead>Delete</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.map((item, index) => (
-            <TableRow key={index}>
-              <TableCell>{item.host}</TableCell>
-              <TableCell>{capitalize(item.day).slice(0, 3)}.</TableCell>
+            <TableRow key={index}
+              className={cn({
+                'bg-blue-50': item.mode === 'Remote',
+                'bg-green-100': item.mode === 'In-person',
+                'bg-yellow-50': item.mode === 'Hybrid',
+              })}
+            >
+              <TableCell>{renderInvalid(item.host)}</TableCell>
+              <TableCell>{renderInvalid(capitalize(item.day).slice(0, 3) + ".")}</TableCell>
+              <TableCell>{renderInvalid(item.start_time)}</TableCell>
+              <TableCell>{renderInvalid(item.end_time)}</TableCell>
+              <TableCell className={cn({
+                'text-blue-800': item.mode === 'Remote',
+                'text-green-800': item.mode === 'In-person',
+                'text-yellow-800': item.mode === 'Hybrid',
+              })}>{renderInvalid(capitalize(item.mode))}</TableCell>
+              <TableCell>{renderInvalid(item.location)}</TableCell>
               <TableCell>
-                {item.start_time}
+                {item?.link?.length > 20 ? <TruncatedText text={item.link} /> : renderInvalid(item.link)}
               </TableCell>
-              <TableCell>
-                {item.end_time}
-              </TableCell>
-              <TableCell>{capitalize(item.mode)}</TableCell>
-              <TableCell>{item.location}</TableCell>
-              <TableCell><TruncatedText text={item.link} /></TableCell>
               <TableCell>
                 <EditPreview row={item} />
               </TableCell>
               <TableCell>
-                <Button variant="ghost" onClick={() => {
+                <Button className="w-4 h-8" variant="ghost" onClick={() => {
                   const newData = data.filter((_, idx) => idx !== index);
                   setData(newData);
                   console.log(newData);
                 }}>
-                  <Trash2 className="w-4 h-4 text-red-500" />
+                  <Trash2 className="text-red-500" />
                 </Button>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
-      <Button onClick={onSubmit} className={invalid ? "bg-red-500" : "bg-blue-500"} disabled={invalid}>
+      <Button ref={bottomRef} onClick={onSubmit} className={invalid ? "bg-red-500" : "bg-blue-500"} disabled={invalid}>
         {!loading && (invalid ? "Fix Invalid Fields" : "Store Office Hours")}
         {loading && <Loader2 className="animate-spin" size={64} />}
       </Button>

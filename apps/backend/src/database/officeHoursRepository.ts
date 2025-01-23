@@ -186,4 +186,14 @@ export class OfficeHourRepository {
 
     return { affectedRows: result.affectedRows };
   }
+
+  // Method to get users by course ID
+async getUsersByCourseId(courseId: number): Promise<{ email: string }[]> {
+  const query = `SELECT u.email FROM users u JOIN user_courses uc ON u.id = uc.user_id WHERE uc.course_id = ?`;
+  
+  const [rows] = await this.db.query(query, [courseId]);
+
+  return rows as { email: string }[];
+}
+
 }

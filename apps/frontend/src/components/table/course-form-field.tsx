@@ -15,9 +15,7 @@ import {
 import { SearchClass, searchClasses } from "@/services/searchService";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Course, fetchCourseById, storeCourse } from "@/services/userService";
-import { useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import { Course } from "@/services/userService";
 
 interface CourseFormFieldProps {
     course: Course;
@@ -30,8 +28,6 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
     const [isInstructorFocused, setIsInstructorFocused] = useState(false);
     const [inputValue, setInputValue] = useState("");
     const [instructors, setInstructors] = useState<string[]>([]);
-    const queryClient = useQueryClient();
-    const { toast } = useToast();
 
     const handleInput = async (value: string) => {
         setInputValue(value);
@@ -67,8 +63,8 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
     }
 
     return (
-        <>
-            <FormItem className="flex flex-col">
+        <div className="flex gap-4 items-center">
+            <FormItem className="w-1/2">
                 <FormLabel>Course Code (Search)</FormLabel>
                 <FormControl>
                     <div className="relative">
@@ -83,6 +79,7 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
                                 }, 200);
                             }}
                             onChange={(e) => handleInput(e.target.value)}
+                            className="w-full"
                         />
                         {(searchResults?.length || 0) > 0 && isFocused && (
                             <Command className="h-fit absolute top-full left-0 right-0 z-50 mt-1 border rounded-md bg-popover">
@@ -95,7 +92,7 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
                                                 className="cursor-pointer"
                                             >
                                                 <span>
-                                                    {result.code.replace(/\s+/g, "")} - {result.title}
+                                                    {result?.code.replace(/\s+/g, "")} - {result?.title}
                                                 </span>
                                             </CommandItem>
                                         ))}
@@ -107,8 +104,7 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
                 </FormControl>
                 <FormMessage />
             </FormItem>
-
-            <FormItem>
+            <FormItem className="w-1/2">
                 <FormLabel>Course Title</FormLabel>
                 <FormControl>
                     <Input
@@ -168,6 +164,6 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
                 </FormControl>
                 <FormMessage />
             </FormItem>
-        </>
+        </div>
     );
 };

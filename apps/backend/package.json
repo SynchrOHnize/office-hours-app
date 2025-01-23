@@ -21,10 +21,11 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^7.0.0",
-    "@clerk/express": "^1.3.33",
+    "@clerk/express": "^1.3.38",
     "@langchain/community": "^0.3.17",
     "@langchain/core": "^0.3.20",
     "@langchain/openai": "^0.3.14",
+    "@sendgrid/mail": "^8.1.4",
     "axios": "^1.7.7",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",

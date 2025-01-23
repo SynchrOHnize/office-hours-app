@@ -25,14 +25,21 @@ export const Dashboard = () => {
 
   useEffect(() => {
     if (user?.new) {
-      toast({
-        variant: "success",
-        title: "UF email detected.",
-        description: "Welcome to OHsync. Please add your courses to get started.",
-      });
+      if (user.role === "student") {
+        toast({
+          variant: "success",
+          title: "UF email detected.",
+          description: "Welcome to OHsync. Please add your courses to get started.",
+        });
+      } else {
+        toast({
+          variant: "success",
+          title: "UF email detected. Professor/TA detected from UF faculty directory.",
+          description: "Welcome to OHsync. Please insert your courses' office hours.",
+        });
+      }
     }
   }, [user]);
-
 
   const admin = ["admin", "professor", "teaching_assistant"].includes(user?.role || "")
 
