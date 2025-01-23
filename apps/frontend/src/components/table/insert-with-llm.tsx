@@ -135,7 +135,7 @@ export function InsertWithLLM() {
                     variant: "destructive",
                 })
             } else {
-                console.error("Failed to create office hours");
+                console.error("Failed to parse office hours");
                 toast({
                     title: "No Data Found",
                     description: "No office hours found. Please ensure the text has all fields for each data point.",

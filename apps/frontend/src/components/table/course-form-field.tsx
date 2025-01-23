@@ -64,7 +64,7 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
 
     return (
         <div className="flex gap-4 items-center">
-            <FormItem className="w-1/2">
+            <FormItem className="w-1/6">
                 <FormLabel>Course Code (Search)</FormLabel>
                 <FormControl>
                     <div className="relative">
@@ -82,18 +82,16 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
                             className="w-full"
                         />
                         {(searchResults?.length || 0) > 0 && isFocused && (
-                            <Command className="h-fit absolute top-full left-0 right-0 z-50 mt-1 border rounded-md bg-popover">
+                            <Command className="h-fit absolute top-full w-fit left-0 right-0 z-50 mt-2 border rounded-md bg-popover">
                                 <CommandList>
                                     <CommandGroup className="overflow-auto">
                                         {searchResults?.map((result) => (
                                             <CommandItem
                                                 key={result.code + result.title}
                                                 onSelect={() => handleSelectClass(result)}
-                                                className="cursor-pointer"
+                                                className="cursor-pointer text-nowrap"
                                             >
-                                                <span>
                                                     {result?.code.replace(/\s+/g, "")} - {result?.title}
-                                                </span>
                                             </CommandItem>
                                         ))}
                                     </CommandGroup>
@@ -104,7 +102,7 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
                 </FormControl>
                 <FormMessage />
             </FormItem>
-            <FormItem className="w-1/2">
+            <FormItem className="w-7/12">
                 <FormLabel>Course Title</FormLabel>
                 <FormControl>
                     <Input
@@ -121,45 +119,45 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
                 <FormMessage />
             </FormItem>
 
-            <FormItem>
+            <FormItem className="w-1/4">
                 <FormLabel>Instructor</FormLabel>
                 <FormControl>
                     <div className="relative">
-                    <Input
-                        value={course?.instructor || ""}
-                        readOnly
-                        placeholder={
-                            instructors && instructors.length === 0
-                                ? "No results found."
-                                : "Course instructor will appear here..."
-                        }
-                        onFocus={() => setIsInstructorFocused(true)}
-                        onBlur={() => {
-                            // Small delay to allow click events on CommandItems to fire
-                            setTimeout(() => {
-                                setIsInstructorFocused(false);
-                            }, 200);
-                        }}
-                    />
-                    {(instructors?.length || 0) > 0 && isInstructorFocused && (
-                        <Command className="h-fit absolute top-full left-0 right-0 z-50 mt-1 border rounded-md bg-popover">
-                            <CommandList>
-                                <CommandGroup className="overflow-auto">
-                                    {instructors?.map((instructor) => (
-                                        <CommandItem
-                                            key={instructor}
-                                            onSelect={() => handleSelectInstructor(instructor)}
-                                            className="cursor-pointer"
-                                        >
-                                            <span>
-                                                {instructor}
-                                            </span>
-                                        </CommandItem>
-                                    ))}
-                                </CommandGroup>
-                            </CommandList>
-                        </Command>
-                    )}
+                        <Input
+                            value={course?.instructor || ""}
+                            readOnly
+                            placeholder={
+                                course.title && instructors.length === 0
+                                    ? "No results found."
+                                    : "Course instructor will appear here..."
+                            }
+                            onFocus={() => setIsInstructorFocused(true)}
+                            onBlur={() => {
+                                // Small delay to allow click events on CommandItems to fire
+                                setTimeout(() => {
+                                    setIsInstructorFocused(false);
+                                }, 200);
+                            }}
+                        />
+                        {(instructors?.length || 0) > 0 && isInstructorFocused && (
+                            <Command className="h-fit absolute top-full left-0 right-0 z-50 mt-1 border rounded-md bg-popover">
+                                <CommandList>
+                                    <CommandGroup className="overflow-auto">
+                                        {instructors?.map((instructor) => (
+                                            <CommandItem
+                                                key={instructor}
+                                                onSelect={() => handleSelectInstructor(instructor)}
+                                                className="cursor-pointer"
+                                            >
+                                                <span>
+                                                    {instructor}
+                                                </span>
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        )}
                     </div>
                 </FormControl>
                 <FormMessage />
