@@ -13,7 +13,7 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 
-import { Course, PreviewOfficeHour } from "@/services/userService";
+import { Course, PreviewOfficeHour, storeCourse } from "@/services/userService";
 import { parseOfficeHoursJson, parseOfficeHoursText } from "@/services/userService";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "../ui/textarea";
@@ -22,6 +22,7 @@ import { Loader2, Upload } from "lucide-react";
 import OpenAILogo from "@/assets/openai-logo.png";
 import { CourseFormField } from "./course-form-field";
 import { convertHtmlToMarkdown } from 'dom-to-semantic-markdown';
+import { useQueryClient } from "@tanstack/react-query";
 const textSchema = z.object({
     raw_text: z.string().min(1, {
         message: "Inputted text cannot be empty",
@@ -29,12 +30,13 @@ const textSchema = z.object({
 })
 
 export function InsertWithLLM() {
-    const [course, setCourse] = useState<Course | null>(null);
+    const [course, setCourse] = useState<Course>({});
     const [parsedResults, setParsedResults] = useState<PreviewOfficeHour[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [parsingMarkdown, setParsingMarkdown] = useState(false);
     const [showTip, setShowTip] = useState(false);
     const { toast } = useToast();
+    const queryClient = useQueryClient();
     const form = useForm<z.infer<typeof textSchema>>({
         resolver: zodResolver(textSchema),
         defaultValues: {
@@ -95,17 +97,27 @@ export function InsertWithLLM() {
     };
 
     const onSubmit = async (data: z.infer<typeof textSchema>) => {
-        if (!course) {
+        if (!course || !course.course_code || !course.title || !course.instructor) {
             toast({
                 title: "Error!",
-                description: "Please select a course.",
+                description: "Please select a course and instructor.",
                 variant: "destructive",
             })
             return;
         }
-
         setIsLoading(true);
-        let response = await parseOfficeHoursJson(course.course_id, data.raw_text);
+        let coursePayload = await storeCourse(course);
+        if (coursePayload?.statusCode !== 200) {
+            toast({
+                title: "Error!",
+                description: "Failed to store course. Please try again.",
+                variant: "destructive",
+            })
+            return
+        }
+        const courseId = coursePayload?.data.id || 0;
+
+        let response = await parseOfficeHoursJson(courseId, data.raw_text);
         setIsLoading(false);
         if (response?.status !== 200) {
             if (response?.status === 429) {
@@ -146,7 +158,6 @@ export function InsertWithLLM() {
             description: "Office hours parsed successfully.",
             variant: "success",
         })
-        console.log("Course and office hour created successfully");
     }
     return (
         <>

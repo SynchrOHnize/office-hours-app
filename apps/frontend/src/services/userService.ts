@@ -41,9 +41,10 @@ export interface PreviewOfficeHour {
 }
 
 export interface Course {
-  course_id: number;
-  course_code: string;
-  title: string;
+  id?: number;
+  course_code?: string;
+  title?: string;
+  instructor?: string;
 }
 
 export interface Payload {

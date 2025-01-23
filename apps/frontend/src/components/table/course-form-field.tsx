@@ -20,53 +20,51 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
 interface CourseFormFieldProps {
-    course: Course | null;
+    course: Course;
     setCourse: (course: Course) => void;
 }
 
 export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => {
     const [searchResults, setSearchResults] = useState<SearchClass[] | null>(null);
     const [isFocused, setIsFocused] = useState(false);
+    const [isInstructorFocused, setIsInstructorFocused] = useState(false);
     const [inputValue, setInputValue] = useState("");
+    const [instructors, setInstructors] = useState<string[]>([]);
     const queryClient = useQueryClient();
     const { toast } = useToast();
 
     const handleInput = async (value: string) => {
         setInputValue(value);
         if (value.length > 1) {
-            const response = await searchClasses(value);
-            setSearchResults(response?.results || []);
+            const classes = await searchClasses(value);
+            setSearchResults(classes || []);
         } else {
             setSearchResults(null);
         }
-        setCourse({ course_code: value, course_id: 0, title: "" });
     };
 
     const handleSelectClass = async (selectedClass: SearchClass) => {
-        const updatedCourse: Course = {
-            course_id: parseInt(selectedClass.key, 10),
-            course_code: selectedClass.code.replace(/\s+/g, "").toUpperCase(),
-            title: selectedClass.title,
-        };
+        const course_code = selectedClass.code;
+        const title = selectedClass.title;
+        const instructor = selectedClass.instructors[0];
+        const updatedCourse: Course = { course_code, title, instructor };
         setCourse(updatedCourse);
-        setInputValue(updatedCourse.course_code);
-        const existingCourse = await fetchCourseById(updatedCourse.course_id);
-        if (!existingCourse) {
-            const response = await storeCourse(updatedCourse);
-            if (!response) {
-                toast({
-                    title: "Error!",
-                    description: "Failed to save course.",
-                    variant: "destructive",
-                });
-                
-                return;
-            }
-            await queryClient.invalidateQueries({ queryKey: ['courses'] });
-        }
-        setSearchResults([]);
+        setInputValue(course_code);
+        setInstructors(selectedClass.instructors);
         setIsFocused(false);
+
+        const classes = await searchClasses(course_code);
+        setSearchResults(classes || []);
     };
+
+    const handleSelectInstructor = async (instructor: string) => {
+        if (!course.course_code || !course.title) {
+            return;
+        }
+
+        const newCourse = { ...course, instructor };
+        setCourse(newCourse);
+    }
 
     return (
         <>
@@ -92,7 +90,7 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
                                     <CommandGroup className="overflow-auto">
                                         {searchResults?.map((result) => (
                                             <CommandItem
-                                                key={result.key}
+                                                key={result.code + result.title}
                                                 onSelect={() => handleSelectClass(result)}
                                                 className="cursor-pointer"
                                             >
@@ -123,6 +121,50 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
                         }
                         className="bg-muted"
                     />
+                </FormControl>
+                <FormMessage />
+            </FormItem>
+
+            <FormItem>
+                <FormLabel>Instructor</FormLabel>
+                <FormControl>
+                    <div className="relative">
+                    <Input
+                        value={course?.instructor || ""}
+                        readOnly
+                        placeholder={
+                            instructors && instructors.length === 0
+                                ? "No results found."
+                                : "Course instructor will appear here..."
+                        }
+                        onFocus={() => setIsInstructorFocused(true)}
+                        onBlur={() => {
+                            // Small delay to allow click events on CommandItems to fire
+                            setTimeout(() => {
+                                setIsInstructorFocused(false);
+                            }, 200);
+                        }}
+                    />
+                    {(instructors?.length || 0) > 0 && isInstructorFocused && (
+                        <Command className="h-fit absolute top-full left-0 right-0 z-50 mt-1 border rounded-md bg-popover">
+                            <CommandList>
+                                <CommandGroup className="overflow-auto">
+                                    {instructors?.map((instructor) => (
+                                        <CommandItem
+                                            key={instructor}
+                                            onSelect={() => handleSelectInstructor(instructor)}
+                                            className="cursor-pointer"
+                                        >
+                                            <span>
+                                                {instructor}
+                                            </span>
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            </CommandList>
+                        </Command>
+                    )}
+                    </div>
                 </FormControl>
                 <FormMessage />
             </FormItem>
