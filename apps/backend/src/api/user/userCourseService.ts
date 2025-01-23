@@ -67,8 +67,17 @@ export class UserCourseService {
     }
   }
 
-  async storeCourse(course_id: number, course_code: string, title: string): Promise<ServiceResponse<Course | null>> {
-    const response = await this.courseRepository.storeCourse(course_id, course_code, title);
-    return response;
+  async storeCourse(course_code: string, title: string, instructor: string): Promise<ServiceResponse<Course | null>> {
+    try {
+      const course = await this.courseRepository.storeCourse(course_code, title, instructor);
+      if (course) {
+        return ServiceResponse.success("Course stored successfully", course)
+      }
+  
+      return ServiceResponse.failure("Course could not be retrieved", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    } catch (error) {
+      console.error("Database query failed:", error);
+      return ServiceResponse.failure("Failed to store course", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
   }
 }

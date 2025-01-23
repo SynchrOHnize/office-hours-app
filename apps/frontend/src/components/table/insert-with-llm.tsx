@@ -13,7 +13,7 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 
-import { Course, parseOfficeHoursJsonStream, parseOfficeHoursText, PreviewOfficeHour } from "@/services/userService";
+import { Course, parseOfficeHoursJsonStream, parseOfficeHoursText, PreviewOfficeHour, storeCourse } from "@/services/userService";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "../ui/textarea";
 import { PreviewTable } from "./preview-table";
@@ -26,7 +26,7 @@ const textSchema = z.object({
 })
 
 export function InsertWithLLM() {
-    const [course, setCourse] = useState<Course | null>(null);
+    const [course, setCourse] = useState<Course>({});
     const [parsedResults, setParsedResults] = useState<PreviewOfficeHour[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [parsingMarkdown, setParsingMarkdown] = useState(false);
@@ -92,16 +92,26 @@ export function InsertWithLLM() {
     };
 
     const onSubmit = async (data: z.infer<typeof textSchema>) => {
-        if (!course) {
+        if (!course || !course.course_code || !course.title || !course.instructor) {
             toast({
                 title: "Error!",
-                description: "Please select a course.",
+                description: "Please select a course and instructor.",
                 variant: "destructive",
             })
             return;
         }
-
         setIsLoading(true);
+        let coursePayload = await storeCourse(course);
+        if (coursePayload?.statusCode !== 200) {
+            toast({
+                title: "Error!",
+                description: "Failed to store course. Please try again.",
+                variant: "destructive",
+            })
+            return
+        }
+
+        const courseId = coursePayload?.data.id || 0;
 
         const handleStreamedData = (parsed: PreviewOfficeHour) => {
             if (parsed.new) {
@@ -116,7 +126,7 @@ export function InsertWithLLM() {
             }
             bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
         }
-        let response = await parseOfficeHoursJsonStream(course.course_id, data.raw_text, handleStreamedData);
+        let response = await parseOfficeHoursJsonStream(courseId, data.raw_text, handleStreamedData);
         if (response?.status !== 200) {
             if (response?.status === 429) {
                 toast({
@@ -125,7 +135,7 @@ export function InsertWithLLM() {
                     variant: "destructive",
                 })
             } else {
-                console.error("Failed to create office hours");
+                console.error("Failed to parse office hours");
                 toast({
                     title: "No Data Found",
                     description: "No office hours found. Please ensure the text has all fields for each data point.",
@@ -143,7 +153,6 @@ export function InsertWithLLM() {
             description: "Office hours parsed successfully.",
             variant: "success",
         })
-        console.log("Course and office hour created successfully");
     }
     return (
         <>

@@ -13,7 +13,7 @@ import { env } from "@/common/utils/envConfig";
 import { searchRouter } from "./api/search/searchRouter";
 import { llmRouter } from "./api/llm/llmRouter";
 
-const logger = pino({ name: "server start" });
+const logger = pino({ name: 'server', level: env.OHSYNC_LOG_LEVEL });
 const app: Express = express();
 
 // Set the application to trust the reverse proxy

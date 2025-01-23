@@ -15,62 +15,56 @@ import {
 import { SearchClass, searchClasses } from "@/services/searchService";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Course, fetchCourseById, storeCourse } from "@/services/userService";
-import { useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import { Course } from "@/services/userService";
 
 interface CourseFormFieldProps {
-    course: Course | null;
+    course: Course;
     setCourse: (course: Course) => void;
 }
 
 export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => {
     const [searchResults, setSearchResults] = useState<SearchClass[] | null>(null);
     const [isFocused, setIsFocused] = useState(false);
+    const [isInstructorFocused, setIsInstructorFocused] = useState(false);
     const [inputValue, setInputValue] = useState("");
-    const queryClient = useQueryClient();
-    const { toast } = useToast();
+    const [instructors, setInstructors] = useState<string[]>([]);
 
     const handleInput = async (value: string) => {
         setInputValue(value);
         if (value.length > 1) {
-            const response = await searchClasses(value);
-            setSearchResults(response?.results || []);
+            const classes = await searchClasses(value);
+            setSearchResults(classes || []);
         } else {
             setSearchResults(null);
         }
-        setCourse({ course_code: value, course_id: 0, title: "" });
     };
 
     const handleSelectClass = async (selectedClass: SearchClass) => {
-        const updatedCourse: Course = {
-            course_id: parseInt(selectedClass.key, 10),
-            course_code: selectedClass.code.replace(/\s+/g, "").toUpperCase(),
-            title: selectedClass.title,
-        };
+        const course_code = selectedClass.code;
+        const title = selectedClass.title;
+        const instructor = selectedClass.instructors[0];
+        const updatedCourse: Course = { course_code, title, instructor };
         setCourse(updatedCourse);
-        setInputValue(updatedCourse.course_code);
-        const existingCourse = await fetchCourseById(updatedCourse.course_id);
-        if (!existingCourse) {
-            const response = await storeCourse(updatedCourse);
-            if (!response) {
-                toast({
-                    title: "Error!",
-                    description: "Failed to save course.",
-                    variant: "destructive",
-                });
-
-                return;
-            }
-            await queryClient.invalidateQueries({ queryKey: ['courses'] });
-        }
-        setSearchResults([]);
+        setInputValue(course_code);
+        setInstructors(selectedClass.instructors);
         setIsFocused(false);
+
+        const classes = await searchClasses(course_code);
+        setSearchResults(classes || []);
     };
+
+    const handleSelectInstructor = async (instructor: string) => {
+        if (!course.course_code || !course.title) {
+            return;
+        }
+
+        const newCourse = { ...course, instructor };
+        setCourse(newCourse);
+    }
 
     return (
         <div className="flex gap-4 items-center">
-            <FormItem className="w-1/2">
+            <FormItem className="w-1/6">
                 <FormLabel>Course Code (Search)</FormLabel>
                 <FormControl>
                     <div className="relative">
@@ -88,18 +82,16 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
                             className="w-full"
                         />
                         {(searchResults?.length || 0) > 0 && isFocused && (
-                            <Command className="h-fit absolute top-full left-0 right-0 z-50 mt-1 border rounded-md bg-popover">
+                            <Command className="h-fit absolute top-full w-fit left-0 right-0 z-50 mt-2 border rounded-md bg-popover">
                                 <CommandList>
                                     <CommandGroup className="overflow-auto">
                                         {searchResults?.map((result) => (
                                             <CommandItem
-                                                key={result?.key}
+                                                key={result.code + result.title}
                                                 onSelect={() => handleSelectClass(result)}
-                                                className="cursor-pointer"
+                                                className="cursor-pointer text-nowrap"
                                             >
-                                                <span>
                                                     {result?.code.replace(/\s+/g, "")} - {result?.title}
-                                                </span>
                                             </CommandItem>
                                         ))}
                                     </CommandGroup>
@@ -110,7 +102,7 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
                 </FormControl>
                 <FormMessage />
             </FormItem>
-            <FormItem className="w-1/2">
+            <FormItem className="w-7/12">
                 <FormLabel>Course Title</FormLabel>
                 <FormControl>
                     <Input
@@ -123,6 +115,50 @@ export const CourseFormField = ({ course, setCourse }: CourseFormFieldProps) => 
                         }
                         className="bg-muted"
                     />
+                </FormControl>
+                <FormMessage />
+            </FormItem>
+
+            <FormItem className="w-1/4">
+                <FormLabel>Instructor</FormLabel>
+                <FormControl>
+                    <div className="relative">
+                        <Input
+                            value={course?.instructor || ""}
+                            readOnly
+                            placeholder={
+                                course.title && instructors.length === 0
+                                    ? "No results found."
+                                    : "Course instructor will appear here..."
+                            }
+                            onFocus={() => setIsInstructorFocused(true)}
+                            onBlur={() => {
+                                // Small delay to allow click events on CommandItems to fire
+                                setTimeout(() => {
+                                    setIsInstructorFocused(false);
+                                }, 200);
+                            }}
+                        />
+                        {(instructors?.length || 0) > 0 && isInstructorFocused && (
+                            <Command className="h-fit absolute top-full left-0 right-0 z-50 mt-1 border rounded-md bg-popover">
+                                <CommandList>
+                                    <CommandGroup className="overflow-auto">
+                                        {instructors?.map((instructor) => (
+                                            <CommandItem
+                                                key={instructor}
+                                                onSelect={() => handleSelectInstructor(instructor)}
+                                                className="cursor-pointer"
+                                            >
+                                                <span>
+                                                    {instructor}
+                                                </span>
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        )}
+                    </div>
                 </FormControl>
                 <FormMessage />
             </FormItem>

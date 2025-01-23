@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { TimeField } from "../ui/time-field";
-import { Course, storeOfficeHour } from "@/services/userService";
+import { Course, storeCourse, storeOfficeHour } from "@/services/userService";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { CourseFormField } from "./course-form-field";
@@ -86,7 +86,7 @@ const formSchema = z.object({
 });
 
 export function InsertWithForm() {
-    const [course, setCourse] = useState<Course | null>(null);
+    const [course, setCourse] = useState<Course>({});
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
@@ -104,16 +104,26 @@ export function InsertWithForm() {
     const mode = form.watch("mode")
 
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
-        if (!course) {
+        if (!course || !course.course_code || !course.title || !course.instructor) {
             toast({
                 title: "Error!",
-                description: "Please select a course.",
+                description: "Please select a course and instructor.",
                 variant: "destructive",
             })
             return;
         }
+        let coursePayload = await storeCourse(course);
+        if (coursePayload?.statusCode !== 200) {
+            toast({
+                title: "Error!",
+                description: "Failed to store course. Please try again.",
+                variant: "destructive",
+            })
+            return
+        }
+        const courseId = coursePayload?.data.id || 0;
 
-        const officeHour = await storeOfficeHour(course.course_id, data);
+        const officeHour = await storeOfficeHour(courseId, data);
         if (!officeHour) {
             console.error("Failed to create office hour");
             return;
@@ -126,6 +136,7 @@ export function InsertWithForm() {
         })
         console.log("Course and office hour created successfully");
         await queryClient.invalidateQueries({ queryKey: ['officeHours'] });
+        await queryClient.invalidateQueries({ queryKey: ['userCourses'] });
     }
     return (
         <Form {...form}>

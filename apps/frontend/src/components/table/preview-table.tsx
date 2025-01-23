@@ -67,6 +67,7 @@ export const PreviewTable = ({ bottomRef, data, setData }: { bottomRef: React.Re
         description: `${response?.data.length} Office hours stored successfully.`,
       });
       await queryClient.invalidateQueries({ queryKey: ['officeHours'] });
+      await queryClient.invalidateQueries({ queryKey: ['userCourses'] });
     } else {
       toast({
         variant: "destructive",

@@ -1,14 +1,19 @@
+import axios, { type AxiosResponse } from "axios";
 import { StatusCodes } from "http-status-codes";
-import { ServiceResponse } from "@/common/schemas/serviceResponse";
-import { logger } from "@/server";
-import axios from "axios";
 import { z } from "zod";
+import { ServiceResponse } from "@/common/schemas/serviceResponse";
 import { DirectorySearchSchema } from "@/common/schemas/directorySearchSchema";
+import { logger } from "@/server";
 
 interface DirectoryPerson {
   firstName: string;
   lastName: string;
   email: string;
+}
+
+interface GraduateCourse {
+  id: string;
+  name: string;
 }
 
 export class SearchService {
@@ -71,36 +76,91 @@ export class SearchService {
   }
 
   async searchClasses(keyword: string): Promise<ServiceResponse<Record<string, any> | null>> {
-    const formattedKeyword = keyword.replace(/^([A-Za-z]{3})(\d{1,4})$/, "$1 $2");
-    const prefix = formattedKeyword !== keyword ? formattedKeyword.split(" ")[0] : null;
-    try {
-      const response = await axios.post("https://catalog.ufl.edu/course-search/api/?page=fose&route=search", {
-        other: {
-          srcdb: "",
-        },
-        criteria: [
-          {
-            field: "keyword",
-            value: prefix ? prefix : formattedKeyword,
-          },
-        ],
-      });
-      if (!response.data) {
-        return ServiceResponse.failure("No response received from catalog", null, StatusCodes.NOT_FOUND);
-      }
-      response.data.results = response.data.results.filter((result: Record<string, any>) => {
-        const code = (result?.code || "").toUpperCase();
-        const title = (result?.title || "").toUpperCase();
-        const validResult = code.includes(formattedKeyword.toUpperCase()) || title.includes(formattedKeyword.toUpperCase());
-        return validResult;
-      });
-      response.data.count = response.data.results.length;
+    const baseUrl = "https://one.uf.edu/apix/soc/schedule";
+    const termUrl = "https://one.uf.edu/apix/soc/filters";
 
-      // If the original keyword was a course code, and there are multiple results, filter to only the exact match
-      return ServiceResponse.success("Classes found", response.data);
-    } catch (ex) {
-      logger.error(`Error searching classes by keyword: ${(ex as Error).message}`);
-      return ServiceResponse.failure("An error occurred while searching the catalog", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    try {
+      // Step 1: Fetch the current term from the Python script's logic
+      const termResponse = await axios.get(termUrl);
+      const currentTerm = termResponse.data.terms[0].CODE;
+
+      // Step 2: Prepare parameters as per the Python functionality
+      const params = {
+        "course-code": keyword, // e.g., COP3502 or similar
+        "course-title": "",
+        instructor: "",
+        term: currentTerm,
+      };
+
+      // Step 3: Query the UF API with course details
+      const courseResponse = await axios.get(baseUrl, { params });
+
+      if (!courseResponse.data || courseResponse.data.length === 0) {
+        return ServiceResponse.failure("No courses found for the given keyword", null, StatusCodes.NOT_FOUND);
+      }
+
+      const courses = courseResponse.data[0]?.COURSES || [];
+
+      // Step 4: Process and structure data as per the Python logic
+      const data = courses.map((course: Record<string, any>) => ({
+        key: course.courseId,
+        code: course.code,
+        title: course.name,
+        instructors: Array.from(
+          new Set(
+            course.sections.flatMap((section: Record<string, any>) => section.instructors.map((instructor: Record<string, any>) => instructor.name))
+          )
+        ),
+      }));
+
+      return ServiceResponse.success("Classes found", data);
+    } catch (error) {
+      console.error(`Error while searching classes: ${error}`);
+      return ServiceResponse.failure("An error occurred while searching for classes", null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
+  }
+  async listGraduateCourses(): Promise<ServiceResponse<GraduateCourse[] | null>> {
+    let response: AxiosResponse<string, any> | null;
+    let match: RegExpExecArray | null;
+
+    const indexUrl = "https://gradcatalog.ufl.edu/graduate/courses-az/english/";
+    try {
+      response = await axios.get<string>(indexUrl, { responseType: "text" });
+    } catch (e: any) {
+      logger.error(`Failed to retrieve ${indexUrl}: ${e.message}`);
+      return ServiceResponse.failure("Internal server error", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+
+    const indexHtml = response.data;
+    const categoryRegex = /<li><a href="\/graduate\/courses-az\/(\w+)\/">.*?<\/a><\/li>/g;
+    const courses: Record<string, GraduateCourse> = Object.create(null);
+
+    let count = 0;
+    while ((match = categoryRegex.exec(indexHtml)) !== null) {
+      const categoryUrl = `https://gradcatalog.ufl.edu/graduate/courses-az/${match[1]}/`;
+      const courseRegex = /<strong>\s+([A-Z]{3}\s+\d{4}[CL]?)\s+(.*?)\s+<span/g;
+      logger.debug(`graduate-courses-list: ${match[1]} ${count++}`);
+
+      response = null;
+      while (response === null) {
+        try {
+          response = await axios.get<string>(categoryUrl, { responseType: "text" });
+        } catch (e: any) {
+          if (e.code !== "ECONNRESET") {
+            logger.error(`Failed to retrieve ${categoryUrl}: ${e.message}`);
+            return ServiceResponse.failure("Internal server error", null, StatusCodes.INTERNAL_SERVER_ERROR);
+          }
+        }
+      }
+
+      const categoryHtml = response.data;
+      while ((match = courseRegex.exec(categoryHtml)) !== null) {
+        const id = match[1];
+        const name = match[2].replace(/&amp;/g, "&");
+        if (!(id in courses)) courses[id] = { id, name };
+      }
+    }
+
+    return ServiceResponse.success("Success", Object.values(courses));
   }
 }

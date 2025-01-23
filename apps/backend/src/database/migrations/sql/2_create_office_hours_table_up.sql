@@ -12,5 +12,8 @@ CREATE TABLE IF NOT EXISTS office_hours (
   updated_at DATETIME NOT NULL DEFAULT '2024-01-01 00:00:00',
   updated_by VARCHAR(255) DEFAULT NULL,
   is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
-  FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
+  UNIQUE (course_id, host, mode, start_time, end_time, day, is_deleted),
+  INDEX idx_office_hours_course_id_is_deleted (course_id, is_deleted),
+  INDEX idx_office_hours_day_start_time (day, start_time),
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 );

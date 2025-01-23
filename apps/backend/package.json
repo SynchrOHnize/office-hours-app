@@ -5,8 +5,7 @@
   "main": "index.ts",
   "private": true,
   "scripts": {
-    "dev": "tsx watch --clear-screen=false src/index.ts | pino-pretty",
-    "prod": "tsx watch --clear-screen=false --env-file=.env.production src/index.ts | pino-pretty",
+    "dev": "bun run --watch --no-clear-screen src/index.ts | pino-pretty",
     "build": "NODE_ENV=production bun build src/index.ts --target=node --outdir dist",
     "start": "NODE_ENV=production bun run dist/index.js",
     "clean": "rimraf dist coverage",
@@ -40,6 +39,7 @@
     "knex": "^3.1.0",
     "langchain": "^0.3.6",
     "mysql2": "^3.11.3",
+    "node-cache": "^5.1.2",
     "pino-http": "^10.0.0",
     "portkey-ai": "^1.5.7",
     "swagger-ui-express": "^5.0.0",
@@ -57,7 +57,6 @@
     "rimraf": "^6.0.0",
     "supertest": "^7.0.0",
     "tsup": "^8.0.2",
-    "tsx": "^4.7.2",
     "typescript": "^5.4.4",
     "vite-tsconfig-paths": "^5.0.0",
     "vitest": "^2.0.0"

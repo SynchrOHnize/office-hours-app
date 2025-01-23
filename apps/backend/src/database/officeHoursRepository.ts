@@ -30,7 +30,7 @@ export class OfficeHourRepository {
         oh.*,
         c.course_code
       FROM office_hours oh
-      JOIN courses c ON oh.course_id = c.course_id
+      JOIN courses c ON oh.course_id = c.id
       WHERE oh.is_deleted = false
       AND oh.course_id IN (
         SELECT course_id 

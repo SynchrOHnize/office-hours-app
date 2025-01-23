@@ -4,15 +4,7 @@ export interface SearchClass {
   key: string;
   code: string;
   title: string;
-  offsets: string;
-  srcdb: string;
-  rank: number;
-}
-
-export interface ClassSearchResponse {
-  srcdb: string;
-  count: number;
-  results: SearchClass[];
+  instructors: string[];
 }
 
 export interface SearchPayload<T> {
@@ -42,10 +34,10 @@ export const verifyProfessor = async (email: string): Promise<boolean> => {
  * @param keyword - Search term for classes
  * @returns Array of matching classes
  */
-export const searchClasses = async (keyword: string): Promise<ClassSearchResponse | null> => {
+export const searchClasses = async (keyword: string): Promise<SearchClass[] | null> => {
   try {
     const response = await api.get(`/search/classes/${encodeURIComponent(keyword)}`);
-    const payload: SearchPayload<ClassSearchResponse> = response.data;
+    const payload: SearchPayload<SearchClass[]> = response.data;
     return payload.data;
   } catch (error) {
     console.error("Error searching classes:", error);
