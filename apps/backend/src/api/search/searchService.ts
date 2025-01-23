@@ -17,19 +17,18 @@ interface GraduateCourse {
 }
 
 export class SearchService {
-
   async searchDirectory(params: z.infer<typeof DirectorySearchSchema>): Promise<ServiceResponse<DirectoryPerson[]>> {
     // This ensures params has all fields with at least empty strings
     const validatedParams = DirectorySearchSchema.parse(params);
 
     try {
-      const response = await axios.get('https://www.directory.ufl.edu/search/', {
+      const response = await axios.get("https://www.directory.ufl.edu/search/", {
         params: {
           f: validatedParams.first_name,
           l: validatedParams.last_name,
           e: validatedParams.email,
-          a: validatedParams.type
-        }
+          a: validatedParams.type,
+        },
       });
 
       if (!response.data) {
@@ -41,7 +40,7 @@ export class SearchService {
       // First check if there's a match
       const matchCountRegex = /<strong><\/strong><strong>(\d+)\s*<\/strong>\s*match/;
       const matchCount = decodedHtml.match(matchCountRegex);
-      if (!matchCount || matchCount[1] === '0') {
+      if (!matchCount || matchCount[1] === "0") {
         return ServiceResponse.failure("No matches found in directory", [], StatusCodes.NOT_FOUND);
       }
 
@@ -52,16 +51,16 @@ export class SearchService {
         const [_, email, lastName, firstAndMiddle] = match;
 
         // Split and format name
-        const firstName = firstAndMiddle.trim().split(' ')[0]; // Take only first name, ignore middle
+        const firstName = firstAndMiddle.trim().split(" ")[0]; // Take only first name, ignore middle
 
         // Properly capitalize names
-        const formattedFirstName = firstName.toLowerCase().replace(/^\w/, c => c.toUpperCase());
-        const formattedLastName = lastName.toLowerCase().replace(/^\w/, c => c.toUpperCase());
+        const formattedFirstName = firstName.toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+        const formattedLastName = lastName.toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 
         results.push({
           firstName: formattedFirstName,
           lastName: formattedLastName,
-          email: email.toLowerCase()
+          email: email.toLowerCase(),
         });
       }
 
@@ -70,7 +69,6 @@ export class SearchService {
       }
 
       return ServiceResponse.success("Matches found in directory", results);
-
     } catch (ex) {
       logger.error(`Error searching directory by email: ${(ex as Error).message}`);
       return ServiceResponse.failure("An error occurred while searching the directory", [], StatusCodes.INTERNAL_SERVER_ERROR);
@@ -78,58 +76,59 @@ export class SearchService {
   }
 
   async searchClasses(keyword: string): Promise<ServiceResponse<Record<string, any> | null>> {
-    const formattedKeyword = keyword.replace(/^([A-Za-z]{3})(\d{4})$/, '$1 $2');
+    const baseUrl = "https://one.uf.edu/apix/soc/schedule";
+    const termUrl = "https://one.uf.edu/apix/soc/filters";
+
     try {
-        const response = await axios.post("https://catalog.ufl.edu/course-search/api/?page=fose&route=search", {
-            other: {
-                srcdb: ""
-            },
-            criteria: [
-                {
-                    field: "keyword",
-                    value: formattedKeyword
-                }
-            ]
-        });
-        if (!response.data) {
-            return ServiceResponse.failure("No response received from catalog", null, StatusCodes.NOT_FOUND);
-        }
+      // Step 1: Fetch the current term from the Python script's logic
+      const termResponse = await axios.get(termUrl);
+      const currentTerm = termResponse.data.terms[0].CODE;
 
-        response.data.results = response.data.results.slice(0, 50);
+      // Step 2: Prepare parameters as per the Python functionality
+      const params = {
+        "course-code": keyword, // e.g., COP3502 or similar
+        "course-title": "",
+        instructor: "",
+        term: currentTerm,
+      };
 
-        response.data.results = response.data.results.filter((result: Record<string, any>) => {
-          const code = (result.code || "").toUpperCase();
-          const title = (result.title || "").toUpperCase();
-          return (
-            code.includes(formattedKeyword.toUpperCase()) ||
-            title.includes(formattedKeyword.toUpperCase())
-          );
-        });
+      // Step 3: Query the UF API with course details
+      const courseResponse = await axios.get(baseUrl, { params });
 
+      if (!courseResponse.data || courseResponse.data.length === 0) {
+        return ServiceResponse.failure("No courses found for the given keyword", null, StatusCodes.NOT_FOUND);
+      }
 
-        // If the original keyword was a course code, and there are multiple results, filter to only the exact match
-        if (keyword !== formattedKeyword && response.data.count > 1) {
-          response.data.count = 1;
-          response.data.results = [response.data.results[0]];
-        }
+      const courses = courseResponse.data[0]?.COURSES || [];
 
-        return ServiceResponse.success("Classes found", response.data);
-    } catch (ex) {
-        logger.error(`Error searching classes by keyword: ${(ex as Error).message}`);
-        return ServiceResponse.failure("An error occurred while searching the catalog", null, StatusCodes.INTERNAL_SERVER_ERROR);
+      // Step 4: Process and structure data as per the Python logic
+      const data = courses.map((course: Record<string, any>) => ({
+        key: course.courseId,
+        code: course.code,
+        title: course.name,
+        instructors: Array.from(
+          new Set(
+            course.sections.flatMap((section: Record<string, any>) => section.instructors.map((instructor: Record<string, any>) => instructor.name))
+          )
+        ),
+      }));
+
+      return ServiceResponse.success("Classes found", data);
+    } catch (error) {
+      console.error(`Error while searching classes: ${error}`);
+      return ServiceResponse.failure("An error occurred while searching for classes", null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   }
-
   async listGraduateCourses(): Promise<ServiceResponse<GraduateCourse[] | null>> {
     let response: AxiosResponse<string, any> | null;
     let match: RegExpExecArray | null;
 
-    const indexUrl = 'https://gradcatalog.ufl.edu/graduate/courses-az/english/';
+    const indexUrl = "https://gradcatalog.ufl.edu/graduate/courses-az/english/";
     try {
-      response = await axios.get<string>(indexUrl, { responseType: 'text' });
+      response = await axios.get<string>(indexUrl, { responseType: "text" });
     } catch (e: any) {
       logger.error(`Failed to retrieve ${indexUrl}: ${e.message}`);
-      return ServiceResponse.failure('Internal server error', null, StatusCodes.INTERNAL_SERVER_ERROR);
+      return ServiceResponse.failure("Internal server error", null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
 
     const indexHtml = response.data;
@@ -145,11 +144,11 @@ export class SearchService {
       response = null;
       while (response === null) {
         try {
-          response = await axios.get<string>(categoryUrl, { responseType: 'text' });
+          response = await axios.get<string>(categoryUrl, { responseType: "text" });
         } catch (e: any) {
-          if (e.code !== 'ECONNRESET') {
+          if (e.code !== "ECONNRESET") {
             logger.error(`Failed to retrieve ${categoryUrl}: ${e.message}`);
-            return ServiceResponse.failure('Internal server error', null, StatusCodes.INTERNAL_SERVER_ERROR);
+            return ServiceResponse.failure("Internal server error", null, StatusCodes.INTERNAL_SERVER_ERROR);
           }
         }
       }
@@ -157,13 +156,11 @@ export class SearchService {
       const categoryHtml = response.data;
       while ((match = courseRegex.exec(categoryHtml)) !== null) {
         const id = match[1];
-        const name = match[2].replace(/&amp;/g, '&');
-        if (!(id in courses))
-          courses[id] = { id, name };
+        const name = match[2].replace(/&amp;/g, "&");
+        if (!(id in courses)) courses[id] = { id, name };
       }
     }
 
-    return ServiceResponse.success('Success', Object.values(courses));
+    return ServiceResponse.success("Success", Object.values(courses));
   }
-
 }

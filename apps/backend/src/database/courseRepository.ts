@@ -24,7 +24,7 @@ export class CourseRepository {
   async getByCourseId(id: number): Promise<Course | null> {
     try {
       // Parameterized query to prevent SQL injection
-      const [rows]: [any[], FieldPacket[]] = await this.db.query("SELECT * FROM courses WHERE course_id = ?", [id]);
+      const [rows]: [any[], FieldPacket[]] = await this.db.query("SELECT * FROM courses WHERE id = ?", [id]);
 
       // Check if rows exist and are in an array-like format
       if (rows.length === 0) {
@@ -53,7 +53,7 @@ export class CourseRepository {
     try {
       // Parameterized query to prevent SQL injection
       const [rows]: [any[], FieldPacket[]] = await this.db.query(
-        "SELECT * FROM courses JOIN user_courses ON courses.course_id = user_courses.course_id WHERE user_id = ?",
+        "SELECT * FROM courses JOIN user_courses ON courses.id = user_courses.course_id WHERE user_id = ?",
         [id]
       );
 
@@ -69,28 +69,46 @@ export class CourseRepository {
     }
   }
 
-  async storeCourse(course_id: number, course_code: string, title: string): Promise<ServiceResponse<Course | null>> {
-    course_code = course_code.replace(/\s+/g, "");
+  async storeCourse(course_code: string, title: string, instructor: string): Promise<Course | null> {
     try {
       // Insert the course
-      const [result] = await this.db.execute<ResultSetHeader>("INSERT INTO courses (course_id, course_code, title) VALUES (?, ?, ?)", [
-        course_id,
-        course_code,
-        title,
-      ]);
-
+      const [result] = await this.db.execute<ResultSetHeader>(
+        "INSERT INTO courses (course_code, title, instructor) VALUES (?, ?, ?)",
+        [course_code, title, instructor]
+      );
+      
+      // The `insertId` contains the ID of the newly inserted row
+      const course_id = result.insertId;
+  
       // Fetch the newly inserted course
-      const [rows] = await this.db.execute<RowDataPacket[]>("SELECT * FROM courses WHERE course_id = ?", [course_id]);
-
-      if (!rows || rows.length === 0) {
-        return ServiceResponse.failure("Course was created but could not be retrieved", null, StatusCodes.INTERNAL_SERVER_ERROR);
+      const [rows] = await this.db.execute<RowDataPacket[]>(
+        "SELECT * FROM courses WHERE id = ?",
+        [course_id]
+      );
+  
+      if (rows && rows.length > 0) {
+        return rows[0] as Course;
       }
-
-      return ServiceResponse.success("Course stored successfully", rows[0] as Course);
-    } catch (error) {
-      console.error("Database query failed:", error);
-      return ServiceResponse.failure("Failed to store course", null, StatusCodes.INTERNAL_SERVER_ERROR);
+  
+      return null; // If no rows were found
+    } catch (error: any) {
+      // Handle duplicate entry error explicitly
+      if (error.code === "ER_DUP_ENTRY") {
+        // Fetch the existing course by its unique fields
+        const [rows] = await this.db.execute<RowDataPacket[]>(
+          "SELECT * FROM courses WHERE course_code = ? AND title = ? AND instructor = ?",
+          [course_code, title, instructor]
+        );
+  
+        if (rows && rows.length > 0) {
+          console.log("Course already exists:", course_code, title, instructor)
+          return rows[0] as Course; // Return the existing course
+        }
+      } else {
+        throw error
+      }
     }
+    return null;
   }
 
   async storeUserCourse(user_id: string, course_id: number): Promise<ServiceResponse<UserCourse | null>> {

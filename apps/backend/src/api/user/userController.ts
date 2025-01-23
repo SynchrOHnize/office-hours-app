@@ -153,8 +153,8 @@ export class UserController {
   };
 
   public storeCourse: RequestHandler = async (req: Request, res: Response) => {
-    const { course_id, course_code, title } = req.body;
-    const serviceResponse = await this.userCourseService.storeCourse(course_id, course_code, title);
+    const { course_code, title, instructor } = req.body;
+    const serviceResponse = await this.userCourseService.storeCourse(course_code, title, instructor);
     return handleServiceResponse(serviceResponse, res);
   };
 
