@@ -7,8 +7,8 @@ import { logger } from "@/server";
 import ical, { ICalEventRepeatingFreq, ICalEvent, ICalEventData } from "ical-generator";
 import { z } from "zod";
 
-// initialize SendGrid API
-//sgMail.setApiKey(SENDGRID_KEY);
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+sgMail.setApiKey(SENDGRID_API_KEY);
 
 export class OfficeHourService {
   private officeHourRepository: OfficeHourRepository;

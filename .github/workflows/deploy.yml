@@ -36,6 +36,7 @@ jobs:
           echo "CLERK_PUBLISHABLE_KEY=${{ secrets.CLERK_PUBLISHABLE_KEY }}"
           echo "CLERK_SECRET_KEY=${{ secrets.CLERK_SECRET_KEY }}"
           echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}"
+          echo "SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}"
         } > apps/backend/.env.production
     
     - name: Create frontend env file

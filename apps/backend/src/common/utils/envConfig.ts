@@ -12,4 +12,5 @@ export const env = cleanEnv(process.env, {
   MYSQL_DATABASE: str(),
   OHSYNC_LOG_LEVEL: str({ choices: ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'], default: 'info' }),
   OPENAI_API_KEY: str(),
+  SENDGRID_API_KEY: str(),
 });
