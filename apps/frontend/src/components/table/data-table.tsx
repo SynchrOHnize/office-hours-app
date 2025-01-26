@@ -42,32 +42,32 @@ import { Input } from "@/components/ui/input"
 import { InsertOfficeHoursForm } from "./insert-office-hours"
 import { EditOfficeHoursForm } from "./edit-office-hours"
 import { deleteOfficeHours, fetchOfficeHours, fetchUserCourses, getIcalFile, getIcalFileByIds, OfficeHour } from "@/services/userService"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { AddCourseInput } from "./add-user-course"
 import { AlertCircle, Filter, Trash, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import { useState } from "react";
 
-interface DataTableProps<TData, TValue> {
-    columns: ColumnDef<TData, TValue>[]
-    data: TData[]
-    admin: boolean
-}
+interface DataTableProps {
+    columns: ColumnDef<OfficeHour, any>[]; // Columns explicitly for OfficeHour type
+    data: OfficeHour[]; // Data is a list of OfficeHour objects
+    admin: boolean; // Admin flag remains unchanged
+  }
 
-export function DataTable<TData, TValue>({
+export function DataTable({
     columns,
-    data,
     admin,
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps) {
     const [sorting, setSorting] = useState<SortingState>([])
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = useState({})
     const [closedTip, setClosedTip] = useState(false)
     const { toast } = useToast()
+    const queryClient = useQueryClient();
 
-    const { refetch } = useQuery({
+    const { data = [] } = useQuery({
         queryKey: ['officeHours'],
         queryFn: fetchOfficeHours,
     });
@@ -77,7 +77,7 @@ export function DataTable<TData, TValue>({
         queryFn: fetchUserCourses,
     });
 
-    const table = useReactTable({
+    const table = useReactTable<OfficeHour>({
         data,
         columns,
         filterFns: {
@@ -172,7 +172,7 @@ export function DataTable<TData, TValue>({
         const rows = data.filter((_, index) => indices.includes(index.toString())) as OfficeHour[]
         const ids = rows.map((row) => row.id)
         await deleteOfficeHours(ids)
-        await refetch()
+        queryClient.invalidateQueries({ queryKey: ['officeHours'] });
         setRowSelection({})
     };
 
@@ -218,21 +218,16 @@ export function DataTable<TData, TValue>({
         )
     };
 
-    const isRecentlyEdited = (updatedAt: string) => {
+    const isRecentlyEdited = (updatedAt: string | null) => {
+        if (!updatedAt) {
+            return false;
+        }
+
         const currentDate = new Date();
         const updatedDate = new Date(updatedAt);
-        const timeDiff = updatedDate.getTime() - currentDate.getTime(); // Difference in milliseconds
+        const timeDiff = currentDate.getTime() - updatedDate.getTime(); // Difference in milliseconds
         const daysDiff = timeDiff / (1000 * 3600 * 24); // Convert to days
-
-        if (daysDiff < 0) {
-            return false;
-        }
-        else if (daysDiff < 7) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return daysDiff < 7;
     };
 
     return (
@@ -330,7 +325,7 @@ export function DataTable<TData, TValue>({
                                         data-state={row.getIsSelected() && "selected"}
                                          className={cn({
                                             'bg-blue-50': officeHour.mode === 'Remote' && !isRecentlyEdited(updated_at),
-                                            'bg-blue-100': officeHour.mode === 'Remote' && isRecentlyEdited(updated_at),
+                                            'bg-blue-200': officeHour.mode === 'Remote' && isRecentlyEdited(updated_at),
                                             'bg-green-100': officeHour.mode === 'In-person' && !isRecentlyEdited(updated_at),
                                             'bg-green-200': officeHour.mode === 'In-person' && isRecentlyEdited(updated_at),
                                             'bg-yellow-50': officeHour.mode === 'Hybrid' && !isRecentlyEdited(updated_at),

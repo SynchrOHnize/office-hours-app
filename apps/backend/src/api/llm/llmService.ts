@@ -7,20 +7,17 @@ import { StatusCodes } from "http-status-codes";
 import { logger } from "@/server";
 import { type Response } from "express";
 import { capitalize } from "@/common/utils/helper";
-import { OfficeHourRepository } from "@/database/officeHoursRepository";
 
 export class LlmService {
   private llm: ChatOpenAI;
-  private streamingLlm: ChatOpenAI;
-  private cheapLlm: ChatOpenAI;
-  private streamingCheapLlm: ChatOpenAI;
-
 
   constructor() {
-    this.llm = new ChatOpenAI({ modelName: "gpt-4o" });
-    this.streamingLlm = new ChatOpenAI({ modelName: "gpt-4o", streaming: true });
-    this.cheapLlm = new ChatOpenAI({ modelName: "gpt-4o-mini" });
-    this.streamingCheapLlm = new ChatOpenAI({ modelName: "gpt-4o-mini", streaming: true });
+    this.llm = new ChatOpenAI({
+      modelName: "deepseek-chat",
+      configuration: {
+        baseURL: "https://api.deepseek.com",
+      },
+    });
   }
 
   validateData(officeHour: Record<string, any>) {
@@ -31,7 +28,7 @@ export class LlmService {
       } catch {
         return false;
       }
-    }
+    };
 
     if (!officeHour.host || typeof officeHour.host !== "string" || officeHour.host.trim() === "") {
       officeHour.host = officeHour.complete ? "INVALID" : officeHour.host;
@@ -77,11 +74,23 @@ export class LlmService {
 
   formatData(officeHour: Record<string, any>) {
     // Ensure host name is capitalized and trimmed
-    officeHour.host = officeHour.host.split(" ").map((word: string) => capitalize(word)).join(" ") || "";
+    officeHour.host =
+      officeHour.host
+        .split(" ")
+        .map((word: string) => capitalize(word))
+        .join(" ") || "";
     officeHour.day = capitalize(officeHour.day) || "";
     officeHour.link = officeHour.link || "";
     officeHour.location = officeHour.location || "";
-    officeHour.mode = officeHour.link ? (officeHour.location ? "Hybrid" : "Remote") : (officeHour.location ? "In-person" :  officeHour.complete ? "INVALID" : "");
+    officeHour.mode = officeHour.link
+      ? officeHour.location
+        ? "Hybrid"
+        : "Remote"
+      : officeHour.location
+      ? "In-person"
+      : officeHour.complete
+      ? "INVALID"
+      : "";
     officeHour.start_time = officeHour.start_time ? officeHour.start_time.toUpperCase() : "";
     officeHour.end_time = officeHour.end_time ? officeHour.end_time.toUpperCase() : "";
 
@@ -145,7 +154,7 @@ export class LlmService {
         ["user", "Raw Data: {rawData}"],
       ]);
       const outputParser = new StringOutputParser();
-      const chain = prompt.pipe(this.cheapLlm).pipe(outputParser);
+      const chain = prompt.pipe(this.llm).pipe(outputParser);
       let response = await chain.invoke({ rawData });
       response = response.replace(/```markdown\n?|\n?```/g, "");
       return ServiceResponse.success("Successfully parsed office hours", response);
@@ -155,7 +164,7 @@ export class LlmService {
     }
   }
 
-  async parseOfficeHoursJsonStream(courseId: number, rawData: string, res: Response) {
+  async parseOfficeHoursJsonStream(courseId: number, rawData: string, res: Response): Promise<ServiceResponse> {
     const template = `Parse the given data into a jsonl format (no backtick delimiters) with this schema:
     {{
       "host": string,
@@ -176,43 +185,45 @@ export class LlmService {
 
     const outputParser = new StringOutputParser();
     const chain = prompt.pipe(this.llm).pipe(outputParser);
+    let sentData = false;
     try {
       let stream = await chain.stream({ rawData });
       let curr = "";
       let isNew = true;
       for await (const chunk of stream) {
+        if (chunk && chunk != "{}") {
+          sentData = true;
+        }
+
         curr += chunk;
         curr = curr.replace(/```json\n?|\n?```/g, "");
-        curr = curr.replace('\n', '');
+        curr = curr.replace("\n", "");
         const temp = curr;
         try {
-          if (curr.endsWith("\",")) {
-            curr += "\"complete\": false"
+          if (curr.endsWith('",')) {
+            curr += '"complete": false';
             if (isNew) {
-              curr += ",\"new\": true"
+              curr += ',"new": true';
               isNew = false;
             }
-            curr += "}"
-          } else if (curr.endsWith("\",\"")) {
-            curr += "complete\": false"
+            curr += "}";
+          } else if (curr.endsWith('","')) {
+            curr += 'complete": false';
             if (isNew) {
-              curr += ",\"new\": true"
+              curr += ',"new": true';
               isNew = false;
             }
-            curr += "}"
-          } else { 
+            curr += "}";
+          } else {
             try {
-              JSON.parse(curr + "\"}")
-              curr += "\",\"complete\": false"
+              JSON.parse(curr + '"}');
+              curr += '","complete": false';
               if (isNew) {
-                curr += ",\"new\": true"
+                curr += ',"new": true';
                 isNew = false;
               }
-              curr += "}"
-            } catch (error) {
-              
-              
-            }
+              curr += "}";
+            } catch (error) {}
           }
           let parsed = JSON.parse(curr);
           parsed.course_id = courseId;
@@ -225,7 +236,7 @@ export class LlmService {
           if (parsed?.new !== true) {
             parsed.new = false;
           }
-          
+
           parsed = this.formatData(parsed);
           const final = JSON.stringify(parsed);
           res.write(final);
@@ -233,12 +244,17 @@ export class LlmService {
             curr = temp;
           }
         } catch (error) {
-          continue
+          continue;
         }
       }
-      res.end(); // End the response after streaming is complete
-    } catch (error) {
-      console.error("Error in streamResponse:", error);
+      if (!sentData) {
+        return ServiceResponse.failure("Invalid input data. Nothing to parse.", null, 400);
+      }
+
+      return ServiceResponse.success("Data parsed successfully.", null, 200);
+    } catch (err) {
+      const error = err as Error;
+      return ServiceResponse.failure(error.message, null, 400);
     }
-  };
+  }
 }

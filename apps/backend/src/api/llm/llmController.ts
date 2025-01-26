@@ -24,6 +24,7 @@ export class LlmController {
 
   public parseOfficeHoursJsonStream = async (req: Request, res: Response) => {
     const { course_id, raw_data } = req.body;
-    await this.llmService.parseOfficeHoursJsonStream(course_id, raw_data, res);
+    const serviceResponse = await this.llmService.parseOfficeHoursJsonStream(course_id, raw_data, res);
+    return handleServiceResponse(serviceResponse, res);
   };
  }

@@ -108,7 +108,7 @@ export const PreviewTable = ({ bottomRef, data, setData }: { bottomRef: React.Re
               })}
             >
               <TableCell>{renderInvalid(item.host)}</TableCell>
-              <TableCell>{renderInvalid(capitalize(item.day).slice(0, 3) + ".")}</TableCell>
+              <TableCell>{renderInvalid(capitalize(item.day))}</TableCell>
               <TableCell>{renderInvalid(item.start_time)}</TableCell>
               <TableCell>{renderInvalid(item.end_time)}</TableCell>
               <TableCell className={cn({

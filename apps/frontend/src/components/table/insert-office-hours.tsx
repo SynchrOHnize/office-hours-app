@@ -24,7 +24,7 @@ export function InsertOfficeHoursForm() {
                     Insert
                     <Plus className="h-4 w-4" />
                 </DialogTrigger>
-                <DialogContent className={cn("overflow-y-scroll max-h-screen", isForm ? "max-w-xl" : "max-w-5xl")}>
+                <DialogContent className={cn("overflow-y-scroll max-h-screen", isForm ? "max-w-5xl" : "max-w-5xl")}>
                     <DialogHeader>
                         <DialogTitle className="text-center text-xl">Insert Office Hours</DialogTitle>
                         <DialogDescription className="text-center text-sm text-slate-400">

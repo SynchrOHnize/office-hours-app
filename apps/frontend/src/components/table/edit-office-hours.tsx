@@ -1,5 +1,5 @@
 "use client"
-import { Edit } from "lucide-react"
+import { Edit, Loader2 } from "lucide-react"
 import {
     Dialog,
     DialogContent,
@@ -32,6 +32,7 @@ import { TimeField } from "../ui/time-field";
 import { updateOfficeHour } from "@/services/userService";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 const formSchema = z.object({
     course_id: z.number(),
@@ -117,14 +118,26 @@ function convertTo24Hour(time12h: string): string {
 }
 
 export function EditOfficeHoursForm({ row }: { row: any }) {
+    const [loading, setLoading] = useState(false);
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
     const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema)
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            course_id: row.course_id,
+            host: row.host || "",
+            day: (row.day || "").toLowerCase(),
+            start_time: (convertTo24Hour(row.start_time) || "").toLowerCase(),
+            end_time: (convertTo24Hour(row.end_time) || "").toLowerCase(),
+            mode: (row.mode || "").toLowerCase(),
+            location: row.location || "",
+            link: (row.link || "").toLowerCase(),
+        },
     });
 
-    const onClick = () => {
+    const onClick = async () => {
+        console.log(row)
         // Reset all the values the same way as before, using the same functions
         form.reset({
             course_id: row.course_id,
@@ -142,6 +155,7 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
     const mode = form.watch("mode")
 
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
+        setLoading(true);
         if (data.mode === "in-person") {
             data.link = ""
         }
@@ -152,6 +166,7 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
         const officeHour = await updateOfficeHour(row.id, data);
         if (!officeHour) {
             console.error("Failed to update office hour");
+            setLoading(false);
             return;
         }
 
@@ -162,14 +177,18 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
         })
         console.log("Course and office hour updated successfully");
         await queryClient.invalidateQueries({ queryKey: ['officeHours'] });
-        window.location.reload();
-
+        setLoading(false);
     }
     return (
         <>
             <Dialog>
-                <DialogTrigger className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-1 text-sm font-medium border border-gray-700 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900">
-                    <Edit onClick={onClick} className="h-4 w-4" />
+                <DialogTrigger asChild>
+                    <button
+                        onClick={onClick}
+                        className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-1 text-sm font-medium border border-gray-700 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    >
+                        <Edit className="h-4 w-4" />
+                    </button>
                 </DialogTrigger>
                 <DialogContent className="min-w-96 overflow-y-scroll max-h-screen">
                     <DialogHeader>
@@ -314,7 +333,7 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
                                 />
                             )}
                             <hr className="my-4 border-dotted border-1 border-gray-300" />
-                            <Button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white">Update</Button>
+                            <Button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white">{loading ? <>Updating <Loader2 className="mr-2 h-5 w-5 animate-spin" /></> : "Update"}</Button>
                         </form>
                     </Form>
                 </DialogContent>

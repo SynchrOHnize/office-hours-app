@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { TimeField } from "../ui/time-field";
-import { Course, storeCourse, storeOfficeHour } from "@/services/userService";
+import { SelectedCourse, storeCourse, storeOfficeHour } from "@/services/userService";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { CourseFormField } from "./course-form-field";
@@ -86,7 +86,7 @@ const formSchema = z.object({
 });
 
 export function InsertWithForm() {
-    const [course, setCourse] = useState<Course>({});
+    const [course, setCourse] = useState<SelectedCourse>({});
     const { toast } = useToast();
     const queryClient = useQueryClient();
 

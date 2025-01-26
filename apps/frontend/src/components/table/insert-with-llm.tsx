@@ -13,12 +13,12 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 
-import { Course, parseOfficeHoursJsonStream, parseOfficeHoursText, PreviewOfficeHour, storeCourse } from "@/services/userService";
+import { parseOfficeHoursJsonStream, parseOfficeHoursText, PreviewOfficeHour, SelectedCourse, storeCourse } from "@/services/userService";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "../ui/textarea";
 import { PreviewTable } from "./preview-table";
 import { AlertCircle, Loader2, Upload, X } from "lucide-react";
-import OpenAILogo from "@/assets/openai-logo.png";
+import DeepSeekLogo from "@/assets/deepseek.png";
 import { CourseFormField } from "./course-form-field";
 import { convertHtmlToMarkdown } from 'dom-to-semantic-markdown';
 const textSchema = z.object({
@@ -26,7 +26,7 @@ const textSchema = z.object({
 })
 
 export function InsertWithLLM() {
-    const [course, setCourse] = useState<Course>({});
+    const [course, setCourse] = useState<SelectedCourse>({});
     const [parsedResults, setParsedResults] = useState<PreviewOfficeHour[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [parsingMarkdown, setParsingMarkdown] = useState(false);
@@ -139,20 +139,18 @@ export function InsertWithLLM() {
                 toast({
                     title: "No Data Found",
                     description: "No office hours found. Please ensure the text has all fields for each data point.",
-                    variant: "default",
+                    variant: "destructive",
                 })
                 setShowTip(true);
-                return;
             }
-            setShowTip(true);
-            return;
+        } else {
+            toast({
+                title: "Success!",
+                description: "Office hours parsed successfully.",
+                variant: "success",
+            })
         }
-        setIsLoading(false);
-        toast({
-            title: "Success!",
-            description: "Office hours parsed successfully.",
-            variant: "success",
-        })
+        setIsLoading(false)
     }
     return (
         <>
@@ -213,7 +211,7 @@ export function InsertWithLLM() {
                                     <div className="w-full bg-blue-100 border border-blue-200 text-blue-900 px-4 py-3 rounded-lg flex items-center relative">
                                         <AlertCircle className="w-6 h-6 mr-3 text-blue-600" />
                                         <span>
-                                            <strong>Tip:</strong> Try calling GPT again if the output is not sufficient. Ensure the text has all fields (can be seen in the form section).
+                                            <strong>Tip:</strong> Try parsing multiple times if the output is not sufficient. Also ensure the text has enough data.
                                         </span>
                                         <button
                                             className="absolute right-0 mr-4 text-blue-600 hover:text-blue-800"
@@ -233,8 +231,8 @@ export function InsertWithLLM() {
                         {isLoading ? <>Parsing <Loader2 className="mr-2 h-5 w-5 animate-spin" /></> : "Parse with LLM"}
                     </ Button>
                     <span className="text-xs font-normal mx-auto flex items-center justify-center gap-1">
-                        Powered by GPT-4o
-                        <img src={OpenAILogo} alt="OpenAI Logo" className="h-4 w-4" />
+                        Powered by <b>DeepSeek V3</b>
+                        <img src={DeepSeekLogo} alt="OpenAI Logo" className="h-4 w-4" />
                     </span>
                 </form>
             </Form>

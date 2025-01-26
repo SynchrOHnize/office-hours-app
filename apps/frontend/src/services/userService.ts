@@ -43,7 +43,13 @@ export interface PreviewOfficeHour {
 }
 
 export interface Course {
-  id?: number;
+  id: number;
+  course_code: string;
+  title: string;
+  instructor: string;
+}
+
+export interface SelectedCourse {
   course_code?: string;
   title?: string;
   instructor?: string;
@@ -269,12 +275,14 @@ export const parseOfficeHoursJsonStream = async (course_id: number, raw_data: st
         const { responseText } = xhr
         const chunks = responseText.replace(prev, "").replaceAll("}{", "}\n{").split("\n")
         for (const chunk of chunks) {
-          console.log(chunk)
-          const parsed = JSON.parse(chunk) as PreviewOfficeHour;
-          handleStreamedData(parsed)
+          const parsed = JSON.parse(chunk);
+          if (parsed.statusCode) {
+            break;
+          }
+          const officeHour = parsed as PreviewOfficeHour;
+          handleStreamedData(officeHour);
         } 
         prev = responseText
-
       }
     });
     return response; // Return the full AxiosResponse object
