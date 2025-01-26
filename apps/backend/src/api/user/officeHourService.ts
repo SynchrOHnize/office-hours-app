@@ -1,5 +1,6 @@
 import { StatusCodes } from "http-status-codes";
 import sgMail from "@sendgrid/mail";
+import { env } from "@/common/utils/envConfig";
 import type { OfficeHour, OfficeHourSchema } from "@/common/schemas/officeHoursSchema";
 import { OfficeHourRepository } from "@/database/officeHoursRepository";
 import { ServiceResponse } from "@/common/schemas/serviceResponse";
@@ -7,7 +8,7 @@ import { logger } from "@/server";
 import ical, { ICalEventRepeatingFreq, ICalEvent, ICalEventData } from "ical-generator";
 import { z } from "zod";
 
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+const { SENDGRID_API_KEY } = env;
 sgMail.setApiKey(SENDGRID_API_KEY);
 
 export class OfficeHourService {
@@ -201,9 +202,9 @@ export class OfficeHourService {
   }
 
   async sendEmailNotification(users: { email: string }[], updatedOfficeHour: any): Promise<void> {
-    const messages = users.map(user => ({
+    const msg = users.map(user => ({
         to: user.email,
-        from: 'synchrohnize@gmail.com',
+        from: 'support@ohsync.me',
         subject: 'Updated Office Hours Notification',
         text: `Hello,
 
@@ -220,12 +221,7 @@ Updated Office Hours:
 Thank you!`,
     }));
 
-    try {
-        await sgMail.send(messages);
-        console.log('Emails sent successfully.');
-    } catch (error) {
-        console.error('Error sending emails:', error);
-    }
+    sgMail.send(msg).then(() => {console.log('Email sent')}).catch((error) => {console.error(error)});
 }
 
 async updateOfficeHour(id: number, data: z.infer<typeof OfficeHourSchema>, userId: string): Promise<ServiceResponse<OfficeHour | null>> {
@@ -234,11 +230,11 @@ async updateOfficeHour(id: number, data: z.infer<typeof OfficeHourSchema>, userI
 
         // Fetch users enrolled in the course 
         const users = await this.officeHourRepository.getUsersByCourseId(data.course_id);
-        if (users && users.length > 0) {
-            // Send email notifications to all users
-            await this.sendEmailNotification(users, officeHour);
-            console.log("email sent");
-        }
+        console.log(users);
+
+        // Send email notifications to all users
+        await this.sendEmailNotification(users, officeHour);
+        console.log("email sent");
 
         return ServiceResponse.success("Office hour updated successfully", officeHour);
     } catch (ex) {
