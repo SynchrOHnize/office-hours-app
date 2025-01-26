@@ -250,7 +250,7 @@ Thank you!`,
       const officeHour = await this.officeHourRepository.updateOfficeHour(id, data, userId);
 
       // Fetch users enrolled in the course
-      const users = await this.officeHourRepository.getUsersByCourseId(officeHour.course_id);
+      const users = await this.officeHourRepository.getUsersByCourseId(data.course_id);
       console.log(users);
 
       // Send email notifications to all users

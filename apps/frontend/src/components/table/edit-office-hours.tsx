@@ -34,6 +34,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
 const formSchema = z.object({
+    course_id: z.number(),
     host: z.string().min(1, {
         message: "Field cannot be empty.",
     }),
@@ -119,23 +120,14 @@ export function EditOfficeHoursForm({ row }: { row: any }) {
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
-
     const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            host: row.host || "",
-            day: (row.day || "").toLowerCase(),
-            start_time: (convertTo24Hour(row.start_time) || "").toLowerCase(),
-            end_time: (convertTo24Hour(row.end_time) || "").toLowerCase(),
-            mode: (row.mode || "").toLowerCase(),
-            location: row.location || "",
-            link: (row.link || "").toLowerCase(),
-        },
+        resolver: zodResolver(formSchema)
     });
 
     const onClick = () => {
         // Reset all the values the same way as before, using the same functions
         form.reset({
+            course_id: row.course_id,
             host: row.host || "",
             day: (row.day || "").toLowerCase(),
             start_time: (convertTo24Hour(row.start_time) || "").toLowerCase(),
