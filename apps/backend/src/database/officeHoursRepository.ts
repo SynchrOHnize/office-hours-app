@@ -193,6 +193,8 @@ async getUsersByCourseId(courseId: number): Promise<{ email: string }[]> {
   
   const [rows] = await this.db.query(query, [courseId]);
 
+  console.log("query result:", rows);
+  console.log("course id:", courseId);
   return rows as { email: string }[];
 }
 
