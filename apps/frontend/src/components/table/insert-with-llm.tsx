@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "../ui/textarea";
 import { PreviewTable } from "./preview-table";
 import { AlertCircle, Loader2, Upload, X } from "lucide-react";
-import DeepSeekLogo from "@/assets/deepseek.png";
+import LlmLogo from "@/assets/openai-logo.png";
 import { CourseFormField } from "./course-form-field";
 import { convertHtmlToMarkdown } from 'dom-to-semantic-markdown';
 const textSchema = z.object({
@@ -231,8 +231,8 @@ export function InsertWithLLM() {
                         {isLoading ? <>Parsing <Loader2 className="mr-2 h-5 w-5 animate-spin" /></> : "Parse with LLM"}
                     </ Button>
                     <span className="text-xs font-normal mx-auto flex items-center justify-center gap-1">
-                        Powered by <b>DeepSeek V3</b>
-                        <img src={DeepSeekLogo} alt="OpenAI Logo" className="h-4 w-4" />
+                        Powered by <b>GPT-4o</b>
+                        <img src={LlmLogo} alt="OpenAI Logo" className="h-4 w-4" />
                     </span>
                 </form>
             </Form>

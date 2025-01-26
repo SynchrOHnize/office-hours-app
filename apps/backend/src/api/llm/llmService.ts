@@ -12,11 +12,15 @@ export class LlmService {
   private llm: ChatOpenAI;
 
   constructor() {
+    // this.llm = new ChatOpenAI({
+    //   modelName: "deepseek-chat",
+    //   configuration: {
+    //     baseURL: "https://api.deepseek.com",
+    //   },
+    // });
+
     this.llm = new ChatOpenAI({
-      modelName: "deepseek-chat",
-      configuration: {
-        baseURL: "https://api.deepseek.com",
-      },
+      modelName: "gpt-4o",
     });
   }
 
