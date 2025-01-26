@@ -1,10 +1,10 @@
 // llmRouter.ts
-import express, { Router } from "express";
+import { Router } from "express";
 import { LlmController } from "./llmController";
 import { LlmService } from "./llmService";
 import { specialRateLimiter } from "@/common/middleware/rateLimiter";
 
-export const llmRouter = express.Router();
+export const llmRouter = Router();
 llmRouter.use(specialRateLimiter);
 const llmService = new LlmService();
 const llmController = new LlmController(llmService);

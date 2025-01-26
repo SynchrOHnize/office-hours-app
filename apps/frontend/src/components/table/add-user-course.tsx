@@ -67,7 +67,7 @@ export const AddCourseInput = ({
                 value.includes(c.course_code) && value.includes(c.title)
             );
             if (course) {
-                await storeMutation.mutateAsync(course.course_id);
+                await storeMutation.mutateAsync(course.id);
             }
         }
         setInputValue("");
@@ -77,7 +77,7 @@ export const AddCourseInput = ({
         e.stopPropagation(); // Prevent the click from bubbling up to the DialogTrigger
         const course = userCourses.find(c => c.course_code === codeToRemove);
         if (course) {
-            await deleteMutation.mutateAsync(course.course_id);
+            await deleteMutation.mutateAsync(course.id);
         }
     };
 
@@ -166,7 +166,7 @@ export const AddCourseInput = ({
                                     <CommandGroup className="max-h-[200px] overflow-auto">
                                         {filteredCourses.map((course) => (
                                             <CommandItem
-                                                key={course.course_id}
+                                                key={course.id}
                                                 value={`${course.course_code} ${course.title}`}
                                                 onSelect={handleSelect}
                                             >

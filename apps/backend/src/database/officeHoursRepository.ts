@@ -76,9 +76,8 @@ export class OfficeHourRepository {
         start_time, 
         end_time, 
         day,
-        updated_at,
         updated_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, "2024-01-01 00:00:00", ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const [result] = await this.db.execute<ResultSetHeader>(query, [
@@ -152,6 +151,9 @@ export class OfficeHourRepository {
     updateFields.push("updated_by = ?");
     updateValues.push(userId);
 
+    updateFields.push("updated_at = ?");
+    updateValues.push(new Date());
+
     // Add the ID to values array
     updateValues.push(id);
 
@@ -193,6 +195,8 @@ async getUsersByCourseId(courseId: number): Promise<{ email: string }[]> {
   
   const [rows] = await this.db.query(query, [courseId]);
 
+  console.log("query result:", rows);
+  console.log("course id:", courseId);
   return rows as { email: string }[];
 }
 

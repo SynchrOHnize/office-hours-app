@@ -1,5 +1,6 @@
 import { StatusCodes } from "http-status-codes";
 import sgMail from "@sendgrid/mail";
+import { env } from "@/common/utils/envConfig";
 import type { OfficeHour, OfficeHourSchema } from "@/common/schemas/officeHoursSchema";
 import { OfficeHourRepository } from "@/database/officeHoursRepository";
 import { ServiceResponse } from "@/common/schemas/serviceResponse";
@@ -7,7 +8,7 @@ import { logger } from "@/server";
 import ical, { ICalEventRepeatingFreq, ICalEvent, ICalEventData } from "ical-generator";
 import { z } from "zod";
 
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+const { SENDGRID_API_KEY } = env;
 sgMail.setApiKey(SENDGRID_API_KEY);
 
 export class OfficeHourService {
@@ -93,22 +94,22 @@ export class OfficeHourService {
       if (!officeHours) {
         return ServiceResponse.failure("No office hours found", null, StatusCodes.NOT_FOUND);
       }
-  
+
       // create ical file
       const ical_file = ical({ name: calendarName });
 
       // define semesterEnd (office hour events will repeat for however many weeks)
       const semesterEnd = new Date(Date.now() + 3 * 3600 * 1000 * 24 * 7 * 5); // 15 weeks from now
-  
+
       // set the timezone
-      ical_file.timezone('America/New_York');
+      ical_file.timezone("America/New_York");
 
       for (const oh of officeHours) {
         // Base event properties that are common to all modes
         const eventConfig: ICalEventData = {
           start: this.transformTime(oh.day, oh.start_time),
           end: this.transformTime(oh.day, oh.end_time),
-          timezone: 'America/New_York',
+          timezone: "America/New_York",
           summary: `${oh.host}'s Office Hours`,
           organizer: {
             name: oh.host,
@@ -118,7 +119,7 @@ export class OfficeHourService {
             until: semesterEnd,
           },
         };
-  
+
         // Add optional properties based on mode
         if (oh.mode !== "remote") {
           eventConfig.location = oh.location;
@@ -126,15 +127,15 @@ export class OfficeHourService {
         if (oh.mode !== "in-person") {
           eventConfig["url"] = oh.link;
         }
-  
+
         ical_file.createEvent(eventConfig);
       }
-  
+
       const data_str = ical_file.toString();
       if (!data_str) {
         throw new Error("Empty calendar data.");
       }
-  
+
       const url = `data:text/calendar;base64,${Buffer.from(data_str).toString("base64")}`;
       return ServiceResponse.success<string>("Office hours found", url);
     } catch (ex) {
@@ -147,7 +148,7 @@ export class OfficeHourService {
       );
     }
   }
-  
+
   async getIcalFileByIds(officeHourIds: number[]): Promise<ServiceResponse<string | null>> {
     try {
       const officeHours = await this.officeHourRepository.getOfficeHoursByIds(officeHourIds);
@@ -162,7 +163,7 @@ export class OfficeHourService {
       );
     }
   }
-  
+
   async getIcalFileByUserId(user_id: string): Promise<ServiceResponse<string | null>> {
     try {
       const officeHours = await this.officeHourRepository.getOfficeHoursByUserId(user_id);
@@ -188,7 +189,7 @@ export class OfficeHourService {
       return ServiceResponse.failure("An error occurred while storing the office hour", null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   }
-  
+
   async storeListOfficeHour(data: z.infer<typeof OfficeHourSchema>[], userId: string): Promise<ServiceResponse<OfficeHour[] | null>> {
     try {
       const officeHours = await this.officeHourRepository.storeListOfficeHours(data, userId);
@@ -201,11 +202,21 @@ export class OfficeHourService {
   }
 
   async sendEmailNotification(users: { email: string }[], updatedOfficeHour: any): Promise<void> {
-    const messages = users.map(user => ({
-        to: user.email,
-        from: 'synchrohnize@gmail.com',
-        subject: 'Updated Office Hours Notification',
-        text: `Hello,
+    if (!users || users.length === 0) {
+      console.error("No users provided to send email notifications.");
+      return;
+    }
+
+    if (!updatedOfficeHour) {
+      console.error("Updated office hour details are missing.");
+      return;
+    }
+
+    const messages = users.map((user) => ({
+      to: user.email,
+      from: "support@ohsync.me",
+      subject: "Updated Office Hours Notification",
+      text: `Hello,
 
 We wanted to let you know that the office hours for the course have been updated.
 
@@ -214,38 +225,43 @@ Updated Office Hours:
 - Day: ${updatedOfficeHour.day}
 - Time: ${updatedOfficeHour.start_time} - ${updatedOfficeHour.end_time}
 - Mode: ${updatedOfficeHour.mode}
-- Location: ${updatedOfficeHour.location || 'N/A'}
-- Link: ${updatedOfficeHour.link || 'N/A'}
+- Location: ${updatedOfficeHour.location || "N/A"}
+- Link: ${updatedOfficeHour.link || "N/A"}
 
 Thank you!`,
     }));
 
     try {
-        await sgMail.send(messages);
-        console.log('Emails sent successfully.');
-    } catch (error) {
-        console.error('Error sending emails:', error);
-    }
-}
-
-async updateOfficeHour(id: number, data: z.infer<typeof OfficeHourSchema>, userId: string): Promise<ServiceResponse<OfficeHour | null>> {
-    try {
-        const officeHour = await this.officeHourRepository.updateOfficeHour(id, data, userId);
-
-        // Fetch users enrolled in the course 
-        const users = await this.officeHourRepository.getUsersByCourseId(data.course_id);
-        if (users && users.length > 0) {
-            // Send email notifications to all users
-            await this.sendEmailNotification(users, officeHour);
-            console.log("email sent");
+      for (const msg of messages) {
+        try {
+          await sgMail.send(msg);
+          console.log(`Email sent successfully to: ${msg.to}`);
+        } catch (error) {
+          console.error(`Failed to send email to: ${msg.to}. Error:`, error);
         }
-
-        return ServiceResponse.success("Office hour updated successfully", officeHour);
-    } catch (ex) {
-        const errorMessage = `Error storing office hours: ${(ex as Error).message}`;
-        logger.error(errorMessage);
-        return ServiceResponse.failure("An error occurred while storing the office hours", null, StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+    } catch (error) {
+      console.error("An error occurred while sending email notifications:", error);
     }
-}
+  }
 
+  async updateOfficeHour(id: number, data: z.infer<typeof OfficeHourSchema>, userId: string): Promise<ServiceResponse<OfficeHour | null>> {
+    try {
+      const officeHour = await this.officeHourRepository.updateOfficeHour(id, data, userId);
+
+      // Fetch users enrolled in the course
+      const users = await this.officeHourRepository.getUsersByCourseId(data.course_id);
+      console.log(users);
+
+      // Send email notifications to all users
+      await this.sendEmailNotification(users, officeHour);
+      console.log("email sent");
+
+      return ServiceResponse.success("Office hour updated successfully", officeHour);
+    } catch (ex) {
+      const errorMessage = `Error storing office hours: ${(ex as Error).message}`;
+      logger.error(errorMessage);
+      return ServiceResponse.failure("An error occurred while storing the office hours", null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
 }

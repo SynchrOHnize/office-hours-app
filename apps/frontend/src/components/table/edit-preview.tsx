@@ -49,11 +49,11 @@ const formSchema = z.object({
     }),
     location: z.union([
         z
-          .string()
-          .regex(/^[A-Z]+[0-9]+$/, "Location must be uppercase letters followed by numbers (e.g., MALA5200)")
-          .optional(),
+            .string()
+            .regex(/^[A-Z]+[0-9]+$/, "Location must be uppercase letters followed by numbers (e.g., MALA5200)")
+            .optional(),
         z.string().length(0),
-      ]),
+    ]),
     link: z.union([
         z.string().url(),
         z.string().length(0),
@@ -94,6 +94,10 @@ const formSchema = z.object({
 });
 
 function convertTo24Hour(time12h: string): string {
+    if (!time12h) {
+        return time12h;
+    }
+
     const [time, modifier] = time12h.toUpperCase().split(' ');
 
     let [hours, minutes] = time.split(':');
@@ -107,7 +111,6 @@ function convertTo24Hour(time12h: string): string {
     }
 
     const final = `${hours.padStart(2, '0')}:${minutes}`;
-    console.log(final)
     return final;
 }
 
@@ -121,7 +124,6 @@ function convertTo12Hour(time24h: string): string {
 
 export function EditPreview({ row }: { row: any }) {
     const { toast } = useToast();
-    console.log(row.host)
 
     let form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -135,9 +137,10 @@ export function EditPreview({ row }: { row: any }) {
             link: row.link || "",
         },
     });
-    
+
     const onClick = () => {
         // Reset all the values the same way as before, using the same functions
+        console.log(row)
         form.reset({
             host: row.host || "",
             day: (row.day || "").toLowerCase(),
@@ -168,8 +171,13 @@ export function EditPreview({ row }: { row: any }) {
     return (
         <>
             <Dialog>
-                <DialogTrigger className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-1 text-sm font-medium border border-gray-700 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900">
-                    <Edit onClick={onClick} className="h-4 w-4" />
+                <DialogTrigger asChild>
+                    <button
+                        onClick={onClick}
+                        className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-1 text-sm font-medium border border-gray-700 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    >
+                        <Edit className="h-4 w-4" />
+                    </button>
                 </DialogTrigger>
                 <DialogContent className="min-w-96 overflow-y-scroll max-h-screen">
                     <DialogHeader>
@@ -266,7 +274,7 @@ export function EditPreview({ row }: { row: any }) {
                                         <Select onValueChange={field.onChange} value={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Select a modality..."/>
+                                                    <SelectValue placeholder="Select a modality..." />
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
@@ -304,7 +312,7 @@ export function EditPreview({ row }: { row: any }) {
                                         <FormItem>
                                             <FormLabel>Link</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Example: https://ufl.zoom.us/j/123456789" {...field}/>
+                                                <Input placeholder="Example: https://ufl.zoom.us/j/123456789" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
