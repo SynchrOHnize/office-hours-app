@@ -214,21 +214,44 @@ export class OfficeHourService {
 
     const messages = users.map((user) => ({
       to: user.email,
-      from: "support@ohsync.me",
+      from: {
+        email: "support@ohsync.me",
+        name: "OHsync Team"
+      },
       subject: "Updated Office Hours Notification",
       text: `Hello,
-
-We wanted to let you know that the office hours for the course have been updated.
-
-Updated Office Hours:
-- Host: ${updatedOfficeHour.host}
-- Day: ${updatedOfficeHour.day}
-- Time: ${updatedOfficeHour.start_time} - ${updatedOfficeHour.end_time}
-- Mode: ${updatedOfficeHour.mode}
-- Location: ${updatedOfficeHour.location || "N/A"}
-- Link: ${updatedOfficeHour.link || "N/A"}
-
-Thank you!`,
+  
+  We wanted to let you know that the office hours for the course have been updated.
+  
+  Updated Office Hours:
+  - Host: ${updatedOfficeHour.host}
+  - Day: ${updatedOfficeHour.day}
+  - Time: ${updatedOfficeHour.start_time} - ${updatedOfficeHour.end_time}
+  - Mode: ${updatedOfficeHour.mode}
+  - Location: ${updatedOfficeHour.location || "N/A"}
+  - Link: ${updatedOfficeHour.link || "N/A"}
+  
+  Thank you!`,
+  
+      // HTML version of the email
+      html: `
+        <html>
+          <body>
+            <p>Hello,</p>
+            <p>We wanted to let you know that the office hours for the course have been updated.</p>
+            <p><strong>Updated Office Hours:</strong></p>
+            <ul>
+              <li><strong>Host:</strong> ${updatedOfficeHour.host}</li>
+              <li><strong>Day:</strong> ${updatedOfficeHour.day}</li>
+              <li><strong>Time:</strong> ${updatedOfficeHour.start_time} - ${updatedOfficeHour.end_time}</li>
+              <li><strong>Mode:</strong> ${updatedOfficeHour.mode}</li>
+              <li><strong>Location:</strong> ${updatedOfficeHour.location || "N/A"}</li>
+              <li><strong>Link:</strong> ${updatedOfficeHour.link || "N/A"}</li>
+            </ul>
+            <p>Thank you!</p>
+          </body>
+        </html>
+      `
     }));
 
     try {
