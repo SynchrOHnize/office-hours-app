@@ -1,7 +1,7 @@
 // src/types/express.d.ts
 import { ClerkExpressAuthenticatedRequest } from "@clerk/express";
 
-import { Request } from 'express';
+import { Request } from "express";
 
 // Extend Express' Request type
 declare global {

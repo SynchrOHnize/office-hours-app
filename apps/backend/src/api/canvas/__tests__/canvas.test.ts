@@ -1,8 +1,8 @@
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
 
-import type { ServiceResponse } from "@/common/schemas/serviceResponse";
 import { app } from "@/server";
+import type ServiceResponse from "@/utils/service-response";
 
 describe("Canvas API endpoints", () => {
   it("GET / - success", async () => {

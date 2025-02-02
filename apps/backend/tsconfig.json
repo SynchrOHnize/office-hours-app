@@ -15,6 +15,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*", "types/**/*"],
+  "include": ["**/*.ts"],
   "exclude": ["node_modules", "**/*.sql"]
 }
