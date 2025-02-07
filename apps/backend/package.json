@@ -7,7 +7,9 @@
     "prod": "NODE_ENV=production bun run --watch --no-clear-screen src/index.ts | pino-pretty",
     "build": "NODE_ENV=production bun build src/index.ts --target=node --outdir=dist",
     "clean": "rimraf dist",
-    "db": "bun run database/index.ts",
+    "db:init": "bun run database/index.ts init",
+    "db:wipe": "bun run database/index.ts wipe",
+    "db:reset": "bun run database/index.ts reset",
     "lint": "biome check src/",
     "format": "biome format src/"
   },

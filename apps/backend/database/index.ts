@@ -1,4 +1,3 @@
-import fs from 'fs';
 import postgres from 'postgres';
 import sql from '@/database';
 
@@ -14,51 +13,34 @@ async function execute(filename: string) {
   }
 }
 
-async function executeDir(dirname: string) {
-  const names = fs.readdirSync(dirname)
-    .filter(name => name.endsWith('.sql'))
-    .sort();
-  for (const name of names)
-    await execute(`${dirname}/${name}`);
-}
-
-async function up() {
+async function init() {
+  console.log('Initializing database...');
   await sql`CREATE SCHEMA IF NOT EXISTS public`;
-  await executeDir('database/up');
+  for (const name of [
+    'users',
+    'courses',
+    'office-hours',
+    'user-courses',
+    'feedback',
+  ]) await execute(`database/init/${name}.sql`);
 }
 
 async function wipe() {
   console.log('Destroying database...');
-  await sql`DROP SCHEMA public CASCADE`;
+  await sql`DROP SCHEMA IF EXISTS public CASCADE`;
 }
 
-async function seed() {
-  await executeDir('database/seed');
-}
-
-const args = process.argv.slice(2);
-if (args.length !== 1) {
-  console.error('error: expected 1 argument');
-  process.exit(1);
-}
-
-switch (args[0]) {
-  case 'up':
-    await up();
+switch (process.argv[2]) {
+  case 'init':
+    await init();
     break;
   case 'wipe':
     await wipe();
     break;
-  case 'seed':
-    await seed();
-    break;
   case 'reset':
     await wipe();
-    await up();
+    await init();
     break;
-  default:
-    console.error(`error: invalid argument '${args[0]}'`);
-    process.exit(1);
 }
 
 await sql.end();
