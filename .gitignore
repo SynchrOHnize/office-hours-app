@@ -1,7 +1,19 @@
 node_modules
+dist
+
+# Secrets
 .env
-.env.local
-.env.production
-.DS_store
 *.pem
-**/.DS_Store
+
+# Logs
+*.log
+
+# Editor/system-specific
+.vscode
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

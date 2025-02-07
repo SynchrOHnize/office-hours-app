@@ -1,8 +1,6 @@
 {
   "private": true,
   "name": "backend",
-  "version": "0.0.0",
-  "description": "OHsync Backend",
   "type": "module",
   "scripts": {
     "dev": "bun run --watch --no-clear-screen src/index.ts | pino-pretty",

@@ -1,7 +1,6 @@
 {
-  "name": "workspaces",
-  "private": "true",
-  "module": "index.ts",
+  "private": true,
+  "name": "ohsync",
   "type": "module",
   "workspaces": [
     "apps/*"
