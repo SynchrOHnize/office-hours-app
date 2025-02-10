@@ -1,9 +1,12 @@
 # OHsync
 
-<https://ohsync.me>
+**OHsync** is an application that allows University of Florida professors and
+teaching assistants (TAs) to publish office hours in a systematic way, and
+allows students to view these office hours.
 
-**OHsync** is an application that allows UF professors and TAs to publish office
-hours in a systematic way, and allows students to view these office hours.
+This repository contains the backend and the web frontend. The information below
+is primarily for developers; information for users is available at the website,
+<https://ohsync.me>.
 
 ## Getting Started
 
@@ -13,105 +16,106 @@ Install dependencies:
 bun install
 ```
 
-### Frontend
-
-```bash
-bun run frontend
-```
-
 ### Backend
 
-Copy `.env.template` to a new file `.env` and fill with appropriate values.
-
-Then:
+The backend is stored in `apps/backend`. The main entry point is `src/index.ts`,
+which mostly delegates to `src/server.ts`. To test the backend, first copy
+`.env.template` to a new file `.env` and fill with appropriate values. Then
+change to the backend directory and start the server in development mode:
 
 ```bash
-bun run backend
+cd apps/backend
+bun run dev
 ```
-
-## Repository Organization
-
-### Backend
-
-- The backend is stored in `apps/backend`.
-- The entry point is `index.ts`.
 
 ### Frontend
 
-- The frontend is stored in `apps/frontend`.
-- The entry point is `App.tsx`.
+The frontend is stored in `apps/frontend`. The main entry point is `src/App.ts`.
+To test the frontend, change to the frontend directory and start the dev
+server:
 
-## How to Use Git
+```bash
+cd apps/frontend
+bun run dev
+```
 
-1.  **Create a new branch:**
+## Database
+
+First change to the backend directory:
+
+```bash
+cd apps/backend
+```
+
+### Initializing the Database
+
+This initializes the tables and other structures in the database schema. This is
+safe to run on an existing database.
+
+```bash
+bun db:init
+```
+
+### Wiping the Database
+
+**THIS WILL DELETE ALL THE DATA ON THE DATABASE AND DESTROY THE SCHEMA!** The
+database must be re-initialized after running this command to be usable again.
+
+```bash
+bun db:wipe
+```
+
+### Resetting the Database
+
+**THIS WILL DELETE ALL THE DATA ON THE DATABASE AND DESTROY THE SCHEMA!** The two
+operations above can also be done with a single command:
+
+```bash
+bun db:reset
+```
+
+## Using Git
+
+It is recommended to set `push.default` to `current` so that `git push` will
+automatically use the current branch:
+
+```bash
+git config --global push.default current
+```
+
+### Creating a Pull Request
+
+ 1. **Switch to a new branch:**
 
     ```bash
-    git checkout -b <new-branch-name>
+    git switch -c <new-branch-name>
     ```
 
-2.  **Make changes and commit:**
+ 2. **Commit changes:**
 
     ```bash
     git add -A
     git commit -m "Your commit message"
     ```
 
-3.  **Push to remote:**
+ 3. **Push to the central repository:**
 
     ```bash
     git push origin <new-branch-name>
     ```
 
-4.  **Create a Pull Request (PR):**
+ 4. **Create a pull request:**
 
     Click the link generated in the terminal to make your PR.
 
-5.  **Merge PR into main:**
+ 5. **Merge PR into main:**
 
     Merge your code into main if you think its good and proper, otherwise ask
     team to check.
 
-6.  **Pull the latest changes from main:**
+ 6. **Pull the latest changes from main:**
 
     ```bash
-    git checkout main
+    git switch main
     git pull origin main
     ```
-
-## Database
-
-Before using the below bun commands, first change to the backend directory:
-
-```bash
-cd apps/backend
-```
-
-Look in `package.json` for commands.
-
-### Migrate Up
-
-```bash
-npx knex migrate:latest
-# or
-bun mig-up
-```
-
-### Migrate down (DELETES ALL OF THE DATA!!!)
-
-```bash
-npx knex migrate:rollback
-# or
-bun mig-down
-```
-
-### Seed (DELETES ALL OF THE DATA!!!)
-
-```bash
-bun seed
-```
-
-### Do All 3
-
-```bash
-bun db-reset
-```
