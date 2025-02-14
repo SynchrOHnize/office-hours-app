@@ -133,7 +133,7 @@ export class CourseRepository {
   async deleteUserCourse(user_id: string, course_id: number): Promise<ServiceResponse<UserCourse | null>> {
     try {
       // Delete the user course
-      const [rows] = await this.db.execute<RowDataPacket[]>("SELECT * FROM user_courses WHERE user_id = ? AND course_id = ?", [user_id, course_id]);
+      const [rows] = await this.db.execute<RowDataPacket[]>("SELECT * FROM user_courses WHERE user_id = ? AND id = ?", [user_id, course_id]);
 
       if (!rows || rows.length === 0) {
         return ServiceResponse.failure("User course could not be retrieved", null, StatusCodes.INTERNAL_SERVER_ERROR);
@@ -142,7 +142,7 @@ export class CourseRepository {
       const userCourse = rows[0] as UserCourse;
 
 
-      const [result] = await this.db.execute<ResultSetHeader>("DELETE FROM user_courses WHERE user_id = ? AND course_id = ?", [user_id, course_id]);
+      const [result] = await this.db.execute<ResultSetHeader>("DELETE FROM user_courses WHERE user_id = ? AND id = ?", [user_id, course_id]);
 
       // Check if the user course was deleted
       if (result.affectedRows === 0) {
