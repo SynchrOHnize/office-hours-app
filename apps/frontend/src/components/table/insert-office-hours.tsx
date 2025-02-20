@@ -15,7 +15,7 @@ import { InsertWithForm } from "./insert-with-form";
 import { InsertWithLLM } from "./insert-with-llm";
 
 export function InsertOfficeHoursForm() {
-    const [isForm, setIsForm] = useState(true); // True = form style, False = text style
+    const [isForm, setIsForm] = useState(false);
 
     return (
         <>
@@ -32,15 +32,15 @@ export function InsertOfficeHoursForm() {
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid grid-cols-2 grid-rows-2 text-center max-w-xs m-auto">
-                        <Button variant={"ghost"} onClick={() => setIsForm(true)} className={cn(isForm ? "font-bold" : "", "text-md")}>
-                            Standard Form
-                        </Button>
                         <Button variant={"ghost"} onClick={() => setIsForm(false)} className={cn(!isForm ? "font-bold" : "", "text-md")}>
                             Parse with LLM
                             <Star className="h-4 w-4" />
                         </Button>
+                        <Button variant={"ghost"} onClick={() => setIsForm(true)} className={cn(isForm ? "font-bold" : "", "text-md")}>
+                            Standard Form
+                        </Button>
+                        <span className="text-sm">(Recommended)</span>
                         <span></span>
-                        <span className="text-xs">(Recommended)</span>
                     </div>
                     {isForm && <InsertWithForm />}
                     {!isForm && <InsertWithLLM />}
