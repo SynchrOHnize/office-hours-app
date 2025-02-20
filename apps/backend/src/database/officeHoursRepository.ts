@@ -54,7 +54,7 @@ export class OfficeHourRepository {
         oh.*,
         c.course_code
       FROM office_hours oh
-      LEFT JOIN courses c ON oh.course_id = c.course_id
+      LEFT JOIN courses c ON oh.course_id = c.id
       WHERE oh.is_deleted = false
       AND oh.id IN (${placeholders})
       ORDER BY c.course_code, oh.day, oh.start_time
