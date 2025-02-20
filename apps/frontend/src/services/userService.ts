@@ -40,6 +40,7 @@ export interface PreviewOfficeHour {
   link: string;
   complete: boolean;
   new: boolean;
+  generator_id: number;
 }
 
 export interface Course {
@@ -270,7 +271,7 @@ export const parseOfficeHoursJsonStream = async (course_id: number, raw_data: st
   try {
     let prev = "";
     const response = await api.post(`/llm/stream/office-hours`, { raw_data, course_id }, {
-      onDownloadProgress: progressEvent => {
+      onDownloadProgress: (progressEvent) => {
         const xhr = progressEvent.event.target
         const { responseText } = xhr
         const chunks = responseText.replace(prev, "").replaceAll("}{", "}\n{").split("\n")

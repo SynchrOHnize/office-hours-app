@@ -114,16 +114,16 @@ export function InsertWithLLM() {
         const courseId = coursePayload?.data.id || 0;
 
         const handleStreamedData = (parsed: PreviewOfficeHour) => {
-            if (parsed.new) {
-                setParsedResults((prevData) => [...prevData, parsed])
-            } else {
-                // Replace the last element with the new parsed data
-                setParsedResults((prevData) => {
-                    const newData = [...prevData];
-                    newData[newData.length - 1] = parsed;
-                    return newData;
-                })
-            }
+            setParsedResults((prevData) => {
+                const existingIndex = prevData.findIndex(item => item.generator_id === parsed.generator_id);
+                if (existingIndex !== -1) {
+                  return prevData.map((item, index) =>
+                    index === existingIndex ? parsed : item
+                  );
+                } else {
+                  return [...prevData, parsed];
+                }
+              });
             bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
         }
         let response = await parseOfficeHoursJsonStream(courseId, data.raw_text, handleStreamedData);

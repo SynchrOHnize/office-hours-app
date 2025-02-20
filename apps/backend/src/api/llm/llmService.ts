@@ -194,6 +194,7 @@ export class LlmService {
       let stream = await chain.stream({ rawData });
       let curr = "";
       let isNew = true;
+      let generator_id = Math.floor(Math.random() * 1000000);
       for await (const chunk of stream) {
         if (chunk && chunk != "{}") {
           sentData = true;
@@ -231,10 +232,12 @@ export class LlmService {
           }
           let parsed = JSON.parse(curr);
           parsed.course_id = courseId;
+          parsed.generator_id = generator_id;
           if (parsed?.complete !== false) {
             parsed.complete = true;
             curr = "";
             isNew = true;
+            generator_id += 1;
           }
 
           if (parsed?.new !== true) {
@@ -243,6 +246,8 @@ export class LlmService {
 
           parsed = this.formatData(parsed);
           const final = JSON.stringify(parsed);
+          console.log(final);
+          console.log();
           res.write(final);
           if (parsed.complete === false) {
             curr = temp;
