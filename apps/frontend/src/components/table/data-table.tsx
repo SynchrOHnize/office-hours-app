@@ -235,7 +235,7 @@ export function DataTable({
             {!closedTip && <div className="w-full mb-5 bg-blue-100 border border-blue-200 text-blue-900 px-4 py-3 rounded-lg flex items-center relative">
                 <AlertCircle className="w-6 h-6 mr-3 text-blue-600" />
                 <span>
-                    <strong>Tip:</strong> Darker backgrounds indicate that the office hours have recently changed.
+                    <strong>Tip:</strong> A darker background indicates that the row has recently changed.
                 </span>
                 <button
                     className="absolute right-0 mr-4 text-blue-600 hover:text-blue-800"
