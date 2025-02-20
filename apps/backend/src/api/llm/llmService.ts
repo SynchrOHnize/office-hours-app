@@ -246,8 +246,8 @@ export class LlmService {
 
           parsed = this.formatData(parsed);
           const final = JSON.stringify(parsed);
-          console.log(final);
-          console.log();
+          // console.log(final);
+          // console.log();
           res.write(final);
           if (parsed.complete === false) {
             curr = temp;
